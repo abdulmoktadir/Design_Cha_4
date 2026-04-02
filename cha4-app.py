@@ -733,7 +733,7 @@ def check_password():
                         <div class="login-badge">Secure research workspace</div>
                         <h1>🔒 Protected System-Level TrFS Decision Support Studio</h1>
                         <p>
-                            Access the integrated workspace for stratification, scenario-aware TrFS-BWM,
+                            ⚙️ Access the integrated workspace for stratification, scenario-aware TrFS-BWM,
                             global weight synthesis, TrFS-QFD prioritization, and MILP strategy optimization
                             in one premium environment.
                         </p>
