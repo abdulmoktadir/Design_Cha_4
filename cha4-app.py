@@ -182,29 +182,51 @@ st.markdown("""
         border-top: 1px solid #e2e8f0;
     }
 
-    /* Login screen */
-    .login-shell {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 70vh;
+        /* Login page - compact and centered */
+    .login-page {
+        max-width: 520px;
+        margin: 2.5rem auto 0 auto;
+        padding: 0 0.5rem 1rem 0.5rem;
     }
-    .login-card {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        width: 100%;
-        max-width: 420px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        border: 1px solid #e2e8f0;
+
+    .login-hero {
+        text-align: center;
+        margin-bottom: 1.25rem;
     }
-    .hero h2 {
-        font-size: 1.8rem;
-        margin-bottom: 0.5rem;
+
+    .login-hero h1 {
+        font-size: 2.1rem;
+        margin: 0 0 0.45rem 0;
+        color: #0f172a;
+        letter-spacing: -0.03em;
     }
-    .hero-sub {
+
+    .login-hero p {
+        margin: 0;
         color: #475569;
-        font-size: 0.9rem;
+        font-size: 0.98rem;
+        line-height: 1.55;
+    }
+
+    .login-form-note {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.86rem;
+        margin-bottom: 0.9rem;
+    }
+
+    /* Style the Streamlit form itself as the card */
+    div[data-testid="stForm"] {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.2rem 1.2rem 0.9rem 1.2rem;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    div[data-testid="stForm"] [data-testid="stFormSubmitButton"] > button {
+        width: 100%;
+        margin-top: 0.35rem;
     }
 
     /* ===== Premium sidebar header ===== */
@@ -322,45 +344,50 @@ def check_password():
 
     expected_password = st.secrets.get("APP_PASSWORD", None)
 
-    st.markdown(
-        """
-        <div class="login-shell">
-            <div class="hero" style="margin-bottom:0.9rem;">
-                <h2>IT2TrFS MCDM Toolkit</h2>
-                <p class="hero-sub">
-                    Secure access to a decision analytics workspace for IT2TrFS Delphi, WINGS & CoCoSo.
-                </p>
+    left, center, right = st.columns([1.15, 1.3, 1.15])
+
+    with center:
+        st.markdown(
+            """
+            <div class="login-page">
+                <div class="login-hero">
+                    <h1>IT2TrFS MCDM Toolkit</h1>
+                    <p>
+                        Secure access to a decision analytics workspace for
+                        IT2TrFS Delphi, WINGS &amp; CoCoSo.
+                    </p>
+                </div>
+                <div class="login-form-note">
+                    Sign in with the application password
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown('<div class="login-shell"><div class="login-card">', unsafe_allow_html=True)
-    st.markdown("### Sign in")
-    st.caption("Enter the application password to continue.")
-
-    if expected_password is None:
-        st.error(
-            "APP_PASSWORD is not configured. Add it in Streamlit secrets "
-            "(.streamlit/secrets.toml locally or Settings → Secrets on Streamlit Cloud)."
+            """,
+            unsafe_allow_html=True,
         )
-        st.markdown("</div></div>", unsafe_allow_html=True)
-        return False
 
-    with st.form("login_form", clear_on_submit=False):
-        password = st.text_input("Password", type="password", placeholder="Enter password")
-        submitted = st.form_submit_button("Log in", use_container_width=True)
+        if expected_password is None:
+            st.error(
+                "APP_PASSWORD is not configured. Add it in Streamlit secrets "
+                "(.streamlit/secrets.toml locally or Settings → Secrets on Streamlit Cloud)."
+            )
+            return False
 
-    if submitted:
-        if hmac.compare_digest(password, str(expected_password)):
-            st.session_state.authenticated = True
-            st.success("Access granted.")
-            st.rerun()
-        else:
-            st.error("Incorrect password.")
+        with st.form("login_form", clear_on_submit=False):
+            password = st.text_input(
+                "Password",
+                type="password",
+                placeholder="Enter application password",
+            )
+            submitted = st.form_submit_button("Log in", use_container_width=True)
 
-    st.markdown("</div></div>", unsafe_allow_html=True)
+        if submitted:
+            if hmac.compare_digest(password, str(expected_password)):
+                st.session_state.authenticated = True
+                st.success("Access granted.")
+                st.rerun()
+            else:
+                st.error("Incorrect password.")
+
     return False
 
 
