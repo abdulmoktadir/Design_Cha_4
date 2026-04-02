@@ -1236,16 +1236,24 @@ def _milp_normalize_vector_df(df: Optional[pd.DataFrame], strategy_names: List[s
 
 def _milp_normalize_square_df(df: Optional[pd.DataFrame], strategy_names: List[str]) -> pd.DataFrame:
     strategy_names = _sanitize_name_sequence(strategy_names, prefix="Strategy")
-    if not isinstance(df, pd.DataFrame):
+    n = len(strategy_names)
+    if n == 0:
+        return pd.DataFrame(dtype=float)
+    if not isinstance(df, pd.DataFrame) or df.empty:
         return make_square_df(strategy_names, 0.0)
 
     out = df.copy()
     out.index = [str(x).strip() for x in out.index]
     out.columns = [str(c).strip() for c in out.columns]
+    out = out.loc[~out.index.duplicated(keep="last"), ~out.columns.duplicated(keep="last")]
     out = out.reindex(index=strategy_names, columns=strategy_names, fill_value=0.0)
-    out = out.apply(lambda col: col.map(lambda v: _to_float(v, 0.0)))
-    np.fill_diagonal(out.values, 0.0)
-    return out
+
+    arr = np.zeros((n, n), dtype=float)
+    for i in range(n):
+        for j in range(n):
+            arr[i, j] = _to_float(out.iat[i, j], 0.0)
+    np.fill_diagonal(arr, 0.0)
+    return pd.DataFrame(arr, index=strategy_names, columns=strategy_names)
 
 
 def _ensure_milp_avg_expert_store(strategy_names: List[str], n_exp: int) -> None:
