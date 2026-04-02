@@ -26,114 +26,47 @@ st.set_page_config(
 # ============================================================
 st.markdown("""
 <style>
-    /* Import modern font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     * {
         font-family: 'Inter', sans-serif;
     }
 
-    /* Main background */
     .stApp {
         background-color: #f8fafc;
     }
 
-    /* ===== Main workspace banner (right side / main body) ===== */
-    .workspace-banner {
-        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 50%, #06b6d4 100%);
-        border-radius: 22px;
-        padding: 1.35rem 1.45rem;
-        margin-bottom: 1.1rem;
-        box-shadow: 0 14px 32px rgba(29, 78, 216, 0.18);
-        border: 1px solid rgba(255,255,255,0.18);
-    }
-    .workspace-banner-title {
-        color: #ffffff;
-        font-size: 1.75rem;
-        font-weight: 800;
-        margin: 0 0 0.35rem 0;
-        letter-spacing: -0.03em;
-    }
-    .workspace-banner-subtitle {
-        color: rgba(255,255,255,0.92);
-        font-size: 0.98rem;
-        line-height: 1.55;
-        margin: 0 0 0.95rem 0;
-    }
-    .workspace-chip-wrap {
-        display: flex;
-        gap: 0.55rem;
-        flex-wrap: wrap;
-    }
-    .workspace-chip {
-        display: inline-block;
-        font-size: 0.78rem;
-        font-weight: 700;
-        padding: 0.34rem 0.78rem;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.14);
-        color: #ffffff;
-        border: 1px solid rgba(255,255,255,0.20);
-        backdrop-filter: blur(5px);
-    }
-
-    /* ===== Sidebar expander styling: blue / grey ===== */
-    [data-testid="stSidebar"] div[data-testid="stExpander"] {
-        border: 1px solid rgba(148, 163, 184, 0.22);
-        border-radius: 14px;
-        background: rgba(148, 163, 184, 0.08);
-        overflow: hidden;
-        margin-bottom: 0.75rem;
-    }
-    [data-testid="stSidebar"] div[data-testid="stExpander"] details {
-        border-radius: 14px;
-    }
-
-    [data-testid="stSidebar"] div[data-testid="stExpander"] summary {
-        background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(71,85,105,0.34));
-        border-radius: 12px;
-        padding: 0.2rem 0.35rem;
-    }
-
-    [data-testid="stSidebar"] div[data-testid="stExpander"] summary:hover {
-        background: linear-gradient(135deg, rgba(59,130,246,0.30), rgba(100,116,139,0.40));
-    }
-
-    [data-testid="stSidebar"] div[data-testid="stExpander"] summary p,
-    [data-testid="stSidebar"] div[data-testid="stExpander"] summary span {
-        color: #e2e8f0 !important;
-        font-weight: 700;
-    }
     /* ===== Interactive suite hero ===== */
     .suite-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 42%, #06b6d4 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 40%, #06b6d4 100%);
         border-radius: 24px;
-        padding: 1.5rem 1.5rem 1.35rem 1.5rem;
-        margin-bottom: 1.2rem;
+        padding: 1.55rem 1.55rem 1.2rem 1.55rem;
+        margin-bottom: 1.25rem;
         box-shadow: 0 18px 40px rgba(29, 78, 216, 0.18);
-        border: 1px solid rgba(255,255,255,0.16);
+        border: 1px solid rgba(255,255,255,0.14);
         overflow: hidden;
         position: relative;
     }
+
     .suite-hero::before {
         content: "";
         position: absolute;
-        top: -40px;
-        right: -40px;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 70%);
+        top: -42px;
+        right: -42px;
+        width: 190px;
+        height: 190px;
+        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 72%);
         border-radius: 50%;
     }
 
     .suite-hero::after {
         content: "";
         position: absolute;
-        bottom: -35px;
-        left: -35px;
-        width: 150px;
-        height: 150px;
-        background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.01) 70%);
+        bottom: -42px;
+        left: -42px;
+        width: 165px;
+        height: 165px;
+        background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.01) 72%);
         border-radius: 50%;
     }
 
@@ -144,7 +77,7 @@ st.markdown("""
 
     .suite-hero-title {
         color: #ffffff;
-        font-size: 1.95rem;
+        font-size: 2rem;
         font-weight: 800;
         margin: 0 0 0.35rem 0;
         letter-spacing: -0.03em;
@@ -155,57 +88,50 @@ st.markdown("""
         font-size: 1rem;
         line-height: 1.55;
         max-width: 780px;
-        margin: 0 0 1rem 0;
+        margin: 0;
     }
 
-    .suite-card-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.85rem;
-        position: relative;
-        z-index: 1;
-    }
-
-    .suite-mini-card {
+    .suite-native-card {
         background: rgba(255,255,255,0.12);
         border: 1px solid rgba(255,255,255,0.18);
         border-radius: 18px;
-        padding: 0.9rem 0.95rem;
+        padding: 0.95rem 1rem;
         backdrop-filter: blur(8px);
+        min-height: 132px;
         transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
     }
 
-    .suite-mini-card:hover {
+    .suite-native-card:hover {
         transform: translateY(-4px);
         background: rgba(255,255,255,0.18);
         box-shadow: 0 14px 26px rgba(15,23,42,0.14);
     }
 
-    .suite-mini-title {
+    .suite-native-title {
         color: #ffffff;
-        font-size: 0.95rem;
+        font-size: 1rem;
         font-weight: 800;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.25rem;
     }
 
-    .suite-mini-text {
+    .suite-native-text {
         color: rgba(255,255,255,0.88);
-        font-size: 0.82rem;
-        line-height: 1.45;
+        font-size: 0.83rem;
+        line-height: 1.48;
     }
 
     .suite-badge-row {
         display: flex;
         gap: 0.45rem;
         flex-wrap: wrap;
-        margin-top: 0.85rem;
+        margin-top: 0.9rem;
         position: relative;
         z-index: 1;
     }
 
     .suite-badge {
         display: inline-block;
-        padding: 0.35rem 0.72rem;
+        padding: 0.36rem 0.75rem;
         border-radius: 999px;
         font-size: 0.75rem;
         font-weight: 700;
@@ -214,24 +140,16 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.16);
     }
 
-    @media (max-width: 900px) {
-        .suite-card-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-    [data-testid="stSidebar"] div[data-testid="stExpander"] details[open] > summary {
-        background: linear-gradient(135deg, rgba(37,99,235,0.30), rgba(71,85,105,0.45));
-    }
-
-    /* Sidebar */
+    /* ===== Sidebar ===== */
     [data-testid="stSidebar"] {
         background-color: #0f172a;
         border-right: none;
     }
+
     [data-testid="stSidebar"] .sidebar-content {
         padding: 1.5rem 1rem;
     }
+
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3,
@@ -240,29 +158,104 @@ st.markdown("""
     [data-testid="stSidebar"] .stButton > button {
         color: #f1f5f9 !important;
     }
+
     [data-testid="stSidebar"] .stRadio label div {
         color: #f1f5f9;
     }
+
     [data-testid="stSidebar"] .stRadio label:hover {
         background-color: #1e293b;
         border-radius: 8px;
     }
+
     [data-testid="stSidebar"] .stSuccess {
         background-color: #1e293b;
         color: #e2e8f0;
     }
+
     [data-testid="stSidebar"] .stButton > button {
         background-color: transparent;
         border: 1px solid #94a3b8;
         color: #f1f5f9;
         border-radius: 8px;
     }
+
     [data-testid="stSidebar"] .stButton > button:hover {
         background-color: #3b82f6;
         border-color: #3b82f6;
     }
 
-    /* Cards – subtle and clean */
+    /* ===== Sidebar expander styling ===== */
+    [data-testid="stSidebar"] div[data-testid="stExpander"] {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 14px;
+        background: rgba(148, 163, 184, 0.08);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] details {
+        border-radius: 14px;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary {
+        background: linear-gradient(135deg, rgba(59,130,246,0.24), rgba(71,85,105,0.34));
+        border-radius: 12px;
+        padding: 0.2rem 0.35rem;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary:hover {
+        background: linear-gradient(135deg, rgba(59,130,246,0.30), rgba(100,116,139,0.42));
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary p,
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary span {
+        color: #e2e8f0 !important;
+        font-weight: 700;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] details[open] > summary {
+        background: linear-gradient(135deg, rgba(37,99,235,0.30), rgba(71,85,105,0.46));
+    }
+
+    /* ===== Page banners ===== */
+    .page-banner {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 55%, #ec4899 100%);
+        border-radius: 20px;
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1.15rem;
+        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.18);
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .page-banner-title {
+        color: white;
+        font-size: 1.65rem;
+        font-weight: 800;
+        margin: 0 0 0.3rem 0;
+        letter-spacing: -0.02em;
+    }
+
+    .page-banner-subtitle {
+        color: rgba(255,255,255,0.92);
+        font-size: 0.96rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .page-banner.green {
+        background: linear-gradient(135deg, #059669 0%, #0ea5e9 55%, #2563eb 100%);
+    }
+
+    .page-banner.orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 55%, #ec4899 100%);
+    }
+
+    .page-banner.slate {
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
+    }
+
+    /* ===== Cards ===== */
     .app-card, .inventor-card {
         background: #ffffff;
         border-radius: 16px;
@@ -270,7 +263,14 @@ st.markdown("""
         margin-bottom: 1.5rem;
         border: 1px solid #eef2f6;
         transition: all 0.2s;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
     }
+
+    .app-card:hover, .inventor-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    }
+
     .app-card h4, .inventor-card h4 {
         margin-top: 0;
         margin-bottom: 0.75rem;
@@ -279,69 +279,81 @@ st.markdown("""
         font-size: 1.1rem;
     }
 
-    /* Researcher profiles */
-    .inventor-name {
-        font-size: 1.3rem;
+    .sidebar-section-title {
+        color: #e2e8f0 !important;
+        font-size: 0.88rem;
         font-weight: 700;
-        color: #0f172a;
-        margin: 0.5rem 0 0.25rem;
-    }
-    .inventor-role {
-        font-size: 0.9rem;
-        color: #475569;
-        margin-bottom: 0.5rem;
-    }
-    .inventor-mini {
-        font-size: 0.85rem;
-        color: #334155;
-        margin-top: 0.5rem;
-    }
-    .inventor-divider {
-        height: 2px;
-        background: linear-gradient(90deg, #e2e8f0, #94a3b8, #e2e8f0);
-        margin: 2rem 0 1rem;
-    }
-    .inventor-section-title {
-        font-size: 1.6rem;
-        font-weight: 600;
-        margin-bottom: 1.2rem;
-        color: #0f172a;
-        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 0.25rem 0 0.75rem 0;
     }
 
-    /* Headers */
+    .sidebar-profile-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 16px;
+        padding: 0.85rem;
+        margin-bottom: 0.85rem;
+        backdrop-filter: blur(6px);
+    }
+
+    .sidebar-profile-name {
+        color: #f8fafc;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-top: 0.55rem;
+        margin-bottom: 0.2rem;
+        line-height: 1.35;
+    }
+
+    .sidebar-profile-role {
+        color: #cbd5e1;
+        font-size: 0.78rem;
+        line-height: 1.35;
+        margin-bottom: 0.45rem;
+    }
+
+    .sidebar-profile-text {
+        color: #94a3b8;
+        font-size: 0.76rem;
+        line-height: 1.5;
+        margin-bottom: 0.45rem;
+    }
+
     h1, h2, h3 {
         color: #0f172a;
         font-weight: 600;
         letter-spacing: -0.3px;
     }
+
     h1 { font-size: 2rem; margin-bottom: 0.25rem; }
     h2 { font-size: 1.5rem; margin-top: 1.5rem; margin-bottom: 1rem; }
     h3 { font-size: 1.25rem; }
 
-    /* Buttons */
     .stButton > button {
         border-radius: 8px;
         font-weight: 500;
         padding: 0.5rem 1rem;
         transition: all 0.2s;
     }
+
     .stButton > button[kind="primary"] {
         background-color: #3b82f6;
         border: none;
         color: white;
     }
+
     .stButton > button[kind="primary"]:hover {
         background-color: #2563eb;
         box-shadow: 0 2px 6px rgba(59,130,246,0.2);
     }
 
-    /* DataFrames & Editors */
     .stDataFrame, .stDataEditor {
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid #e2e8f0;
     }
+
     .stDataFrame thead tr th, .stDataEditor thead tr th {
         background-color: #f8fafc;
         font-weight: 600;
@@ -349,7 +361,6 @@ st.markdown("""
         padding: 0.75rem 1rem;
     }
 
-    /* Metrics */
     .stMetric {
         background: #f8fafc;
         border-radius: 12px;
@@ -358,7 +369,6 @@ st.markdown("""
         border: 1px solid #eef2f6;
     }
 
-    /* Footer */
     .app-footer {
         text-align: center;
         margin-top: 2.5rem;
@@ -368,7 +378,6 @@ st.markdown("""
         border-top: 1px solid #e2e8f0;
     }
 
-        /* Login page - compact and centered */
     .login-page {
         max-width: 520px;
         margin: 2.5rem auto 0 auto;
@@ -401,7 +410,6 @@ st.markdown("""
         margin-bottom: 0.9rem;
     }
 
-    /* Style the Streamlit form itself as the card */
     div[data-testid="stForm"] {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -415,132 +423,14 @@ st.markdown("""
         margin-top: 0.35rem;
     }
 
-    /* ===== Premium sidebar header ===== */
-    .sidebar-brand {
-        background: linear-gradient(135deg, #111827, #1e293b);
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        border-radius: 18px;
-        padding: 1rem 1rem 0.9rem 1rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-    }
-    .sidebar-brand h2 {
-        color: #f8fafc !important;
-        font-size: 1.1rem;
-        margin: 0 0 0.25rem 0;
-        letter-spacing: -0.2px;
-    }
-    .sidebar-brand p {
-        color: #cbd5e1 !important;
-        font-size: 0.82rem;
-        line-height: 1.45;
-        margin: 0;
-    }
-    .sidebar-chip-wrap {
-        display: flex;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-        margin-top: 0.75rem;
-    }
-    .sidebar-chip {
-        display: inline-block;
-        font-size: 0.72rem;
-        font-weight: 600;
-        padding: 0.24rem 0.6rem;
-        border-radius: 999px;
-        background: rgba(59, 130, 246, 0.16);
-        color: #dbeafe !important;
-        border: 1px solid rgba(96, 165, 250, 0.25);
-    }
-
-    /* ===== Sidebar profile section ===== */
-    .sidebar-section-title {
-        color: #e2e8f0 !important;
-        font-size: 0.88rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin: 0.25rem 0 0.75rem 0;
-    }
-    .sidebar-profile-card {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(148, 163, 184, 0.14);
-        border-radius: 16px;
-        padding: 0.85rem;
-        margin-bottom: 0.85rem;
-        backdrop-filter: blur(6px);
-    }
-    .sidebar-profile-name {
-        color: #f8fafc;
-        font-size: 0.95rem;
-        font-weight: 700;
-        margin-top: 0.55rem;
-        margin-bottom: 0.2rem;
-        line-height: 1.35;
-    }
-    .sidebar-profile-role {
-        color: #cbd5e1;
-        font-size: 0.78rem;
-        line-height: 1.35;
-        margin-bottom: 0.45rem;
-    }
-    .sidebar-profile-text {
-        color: #94a3b8;
-        font-size: 0.76rem;
-        line-height: 1.5;
-        margin-bottom: 0.45rem;
-    }
-
-    /* ===== Better navigation polish ===== */
     [data-testid="stSidebar"] .stRadio > div {
         gap: 0.25rem;
     }
+
     [data-testid="stSidebar"] .stRadio label {
         padding: 0.45rem 0.55rem;
         border-radius: 10px;
         transition: all 0.2s ease;
-    }
-
-    /* ===== Softer main cards ===== */
-    .app-card {
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-    }
-    .app-card:hover, .inventor-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
-    }
-    /* ===== Colorful page title box ===== */
-    .page-banner {
-        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 55%, #ec4899 100%);
-        border-radius: 20px;
-        padding: 1.2rem 1.4rem;
-        margin-bottom: 1.15rem;
-        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.18);
-        border: 1px solid rgba(255,255,255,0.18);
-    }
-    .page-banner-title {
-        color: white;
-        font-size: 1.65rem;
-        font-weight: 800;
-        margin: 0 0 0.3rem 0;
-        letter-spacing: -0.02em;
-    }
-    .page-banner-subtitle {
-        color: rgba(255,255,255,0.92);
-        font-size: 0.96rem;
-        line-height: 1.5;
-        margin: 0;
-    }
-    
-    /* Optional alternate banner themes */
-    .page-banner.green {
-        background: linear-gradient(135deg, #059669 0%, #0ea5e9 55%, #2563eb 100%);
-    }
-    .page-banner.orange {
-        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 55%, #ec4899 100%);
-    }
-    .page-banner.slate {
-        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -709,6 +599,7 @@ def render_footer():
         """,
         unsafe_allow_html=True,
     )
+
 def render_page_banner(title, subtitle, theme="default"):
     theme_class = "" if theme == "default" else f" {theme}"
     st.markdown(
@@ -720,6 +611,7 @@ def render_page_banner(title, subtitle, theme="default"):
         """,
         unsafe_allow_html=True,
     )
+
 def render_workspace_banner():
     st.markdown(
         """
@@ -730,40 +622,64 @@ def render_workspace_banner():
                     A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
                 </div>
             </div>
-
-            <div class="suite-card-grid">
-                <div class="suite-mini-card">
-                    <div class="suite-mini-title">📘 Delphi</div>
-                    <div class="suite-mini-text">
-                        Screen and validate criteria from expert responses using IT2TrFS-based Delphi analysis.
-                    </div>
-                </div>
-
-                <div class="suite-mini-card">
-                    <div class="suite-mini-title">🕸️ WINGS</div>
-                    <div class="suite-mini-text">
-                        Explore causal interactions, influence structure, and normalized weights among components.
-                    </div>
-                </div>
-
-                <div class="suite-mini-card">
-                    <div class="suite-mini-title">📊 CoCoSo</div>
-                    <div class="suite-mini-text">
-                        Rank alternatives using linguistic judgments, normalization, and compromise solution logic.
-                    </div>
-                </div>
-            </div>
-
-            <div class="suite-badge-row">
-                <span class="suite-badge">Interactive</span>
-                <span class="suite-badge">Decision Analytics</span>
-                <span class="suite-badge">Excel Export</span>
-                <span class="suite-badge">Research Toolkit</span>
-            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown(
+            """
+            <div class="suite-native-card">
+                <div class="suite-native-title">📘 Delphi</div>
+                <div class="suite-native-text">
+                    Screen and validate criteria from expert responses using IT2TrFS-based Delphi analysis.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col2:
+        st.markdown(
+            """
+            <div class="suite-native-card">
+                <div class="suite-native-title">🕸️ WINGS</div>
+                <div class="suite-native-text">
+                    Explore causal interactions, influence structure, and normalized weights among components.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col3:
+        st.markdown(
+            """
+            <div class="suite-native-card">
+                <div class="suite-native-title">📊 CoCoSo</div>
+                <div class="suite-native-text">
+                    Rank alternatives using linguistic judgments, normalization, and compromise solution logic.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        """
+        <div class="suite-badge-row">
+            <span class="suite-badge">Interactive</span>
+            <span class="suite-badge">Decision Analytics</span>
+            <span class="suite-badge">Excel Export</span>
+            <span class="suite-badge">Research Toolkit</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 def dataframe_dict_to_excel_bytes(sheet_map):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
@@ -1648,7 +1564,6 @@ def main():
         logout()
         st.rerun()
 
-    # Main-body suite banner (right side)
     render_workspace_banner()
 
     if page == "IT2TrFS-Delphi":
