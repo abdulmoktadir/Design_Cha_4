@@ -2768,18 +2768,16 @@ def page_trfs_qfd():
     st.markdown('<h1 class="main-header">📊 TrFS-QFD Analysis</h1>', unsafe_allow_html=True)
     st.markdown("**Challenge → Strategy Relationship Mapping Using TrFS Lingustic Terms**")
 
-    with st.sidebar:
-        st.markdown('<div class="section-header">⚙️ Configuration</div>', unsafe_allow_html=True)
-
-        st.markdown("**Model Dimensions**")
-        col1, col2 = st.columns(2)
-        with col1:
-            n_ch = int(st.number_input("Challenges", min_value=2, max_value=80, value=10, step=1, key="qfd_nch"))
-        with col2:
-            n_sy = int(st.number_input("Strategies", min_value=2, max_value=40, value=10, step=1, key="qfd_nsy"))
-
+    st.markdown('<div class="section-header">⚙️ Configuration</div>', unsafe_allow_html=True)
+    st.caption("Set the TrFS-QFD model dimensions here before entering names, challenge weights, and relationship matrices.")
+    cfg1, cfg2, cfg3 = st.columns(3)
+    with cfg1:
+        n_ch = int(st.number_input("Challenges", min_value=2, max_value=80, value=10, step=1, key="qfd_nch"))
+    with cfg2:
+        n_sy = int(st.number_input("Strategies", min_value=2, max_value=40, value=10, step=1, key="qfd_nsy"))
+    with cfg3:
         n_exp = int(st.number_input("Experts", min_value=1, max_value=10, value=3, step=1, key="qfd_nexp"))
-        st.caption("Expert judgments are aggregated in Module 4 by simple TrFS arithmetic averaging, so no expert-weight inputs are required here.")
+    st.info("Expert judgments are aggregated in Module 4 by simple TrFS arithmetic averaging, so no expert-weight inputs are required here.")
 
     st.markdown('<div class="section-header">📝 Input Definitions</div>', unsafe_allow_html=True)
 
@@ -3252,17 +3250,21 @@ def page_milp():
         st.warning("No valid strategy names are available for the MILP model. Run Module 4 again and ensure each strategy has a name.")
         return
 
-    with st.sidebar:
-        st.markdown('<div class="section-header">⚙️ Optimization Settings</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">⚙️ Optimization Settings</div>', unsafe_allow_html=True)
+    st.caption("Adjust budget, time, expert inputs, and aggregation mode here before solving the portfolio optimization model.")
+    opt1, opt2, opt3 = st.columns([1.2, 1.0, 1.25])
+    with opt1:
         budget = st.number_input("💰 Available Budget (δ)", min_value=0.0, value=200000.0, step=1000.0, format="%.0f")
+    with opt2:
         time_lim = st.number_input("⏱️ Available Time (∄)", min_value=0.0, value=60.0, step=1.0, format="%.1f")
-        st.markdown("---")
+    with opt3:
         n_exp = int(st.number_input("Number of Experts (avg inputs)", min_value=1, max_value=10, value=3, step=1))
-        agg_mode = st.radio(
-            "Aggregation",
-            ["Mean across experts"] + [f"Use only Expert {k}" for k in range(1, n_exp + 1)],
-            index=0
-        )
+    agg_mode = st.radio(
+        "Aggregation",
+        ["Mean across experts"] + [f"Use only Expert {k}" for k in range(1, n_exp + 1)],
+        index=0,
+        horizontal=True,
+    )
 
     st.markdown('<div class="section-header">📊 Strategy Importance Scores</div>', unsafe_allow_html=True)
 
