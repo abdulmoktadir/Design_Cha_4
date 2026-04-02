@@ -409,7 +409,46 @@ st.markdown("""
         font-size: 0.86rem;
         margin-bottom: 0.9rem;
     }
+        .login-hero-box {
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
+        border-radius: 24px;
+        padding: 1.35rem 1.25rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 14px 32px rgba(29, 78, 216, 0.18);
+        border: 1px solid rgba(255,255,255,0.14);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
 
+    .login-hero-box::before {
+        content: "";
+        position: absolute;
+        top: -35px;
+        right: -35px;
+        width: 140px;
+        height: 140px;
+        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 72%);
+        border-radius: 50%;
+    }
+
+    .login-hero-box h1 {
+        color: #ffffff !important;
+        font-size: 2.1rem;
+        margin: 0 0 0.45rem 0;
+        letter-spacing: -0.03em;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-hero-box p {
+        color: rgba(255,255,255,0.92) !important;
+        margin: 0;
+        font-size: 0.98rem;
+        line-height: 1.55;
+        position: relative;
+        z-index: 1;
+    }
     div[data-testid="stForm"] {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -458,21 +497,20 @@ def check_password():
         st.markdown(
             """
             <div class="login-page">
-                <div class="login-hero">
+                <div class="login-hero-box">
                     <h1>IT2TrFS MCDM Toolkit</h1>
                     <p>
                         Secure access to a decision analytics workspace for
                         IT2TrFS Delphi, WINGS &amp; CoCoSo.
                     </p>
-                </div>
-                <div class="login-form-note">
-                    Sign in with the application password
-                </div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
+            <div class="login-form-note">
+                Sign in with the application password
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
         if expected_password is None:
             st.error(
                 "APP_PASSWORD is not configured. Add it in Streamlit secrets "
