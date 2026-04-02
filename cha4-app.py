@@ -10,6 +10,164 @@ import base64
 import matplotlib.pyplot as plt
 import re
 
+
+# ============================================================
+# RESEARCHER PROFILE HELPERS
+# ============================================================
+def get_asset_path(filename):
+    """
+    Resolve image file path.
+    Put the images inside an 'assets' folder beside your app file.
+    Example:
+        app.py
+        assets/
+            prof_jz_ren.png
+            abdul_moktadir.png
+    """
+    return Path(__file__).parent / "assets" / filename
+
+
+def render_inventor_card(name, role, institution, image_path, brief_text, full_bio=None, extras=None):
+    st.markdown('<div class="inventor-card">', unsafe_allow_html=True)
+
+    if Path(image_path).exists():
+        st.image(str(image_path), use_container_width=True)
+    else:
+        st.warning(f"Image not found: {image_path}")
+
+    st.markdown(
+        f"""
+        <div class="inventor-name">{name}</div>
+        <div class="inventor-role">{role}<br>{institution}</div>
+        <div class="inventor-mini">{brief_text}</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if extras:
+        for item in extras:
+            st.markdown(
+                f'<div class="inventor-mini">{item}</div>',
+                unsafe_allow_html=True,
+            )
+
+    if full_bio:
+        with st.expander("View full profile"):
+            st.write(full_bio)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_inventor_profiles():
+    st.markdown('<div class="inventor-divider"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="inventor-section-title">Researcher Profiles</div>',
+        unsafe_allow_html=True,
+    )
+
+    render_inventor_card(
+        name="Prof. J.Z. Ren 任競爭",
+        role="Associate Professor",
+        institution="The Hong Kong Polytechnic University",
+        image_path=get_asset_path("prof_jz_ren.png"),
+        brief_text=(
+            "Research focus: process systems engineering for energy, environment, "
+            "and sustainability. Awarded the 2022 APEC ASPIRE Prize."
+        ),
+        full_bio=(
+            "Dr. Jingzheng Ren is currently an Associate Professor at The Hong Kong "
+            "Polytechnic University. His research focuses on process systems engineering "
+            "for energy, environment and sustainability, including innovative industrial "
+            "processes, decision-making tools, and optimization models for sustainable "
+            "and carbon-neutral industrial systems. He has published extensively and has "
+            "received major international recognition, including the 2022 APEC Science "
+            "Prize for Innovation, Research and Education (ASPIRE Prize)."
+        ),
+    )
+
+    render_inventor_card(
+        name="Md. Abdul Moktadir",
+        role="Assistant Professor (Leather Products Engineering)",
+        institution="University of Dhaka / PolyU Presidential PhD Fellow",
+        image_path=get_asset_path("abdul_moktadir.png"),
+        brief_text=(
+            "Current PhD researcher in Industrial and Systems Engineering at PolyU "
+            "with research interests in sustainable supply chains, logistics, "
+            "risk management, Industry 4.0, and circular economy."
+        ),
+        extras=[
+            "Affiliation: University of Dhaka",
+            "Program: PolyU Presidential PhD Fellow",
+        ],
+        full_bio=(
+            "Md. Abdul Moktadir is currently pursuing a PhD in Industrial and Systems "
+            "Engineering at The Hong Kong Polytechnic University. He also serves as an "
+            "Assistant Professor of Leather Products Engineering at the University of "
+            "Dhaka. His work has appeared in several international journals, and his "
+            "research interests include sustainable supply chain management, risk "
+            "management, energy-efficient supply chain planning and design, logistics, "
+            "Industry 4.0, and circular economy."
+        ),
+    )
+
+# ============================================================
+# AUTHENTICATION
+# ============================================================
+def logout():
+    st.session_state.authenticated = False
+    st.rerun()
+
+
+def check_password():
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if st.session_state.authenticated:
+        return True
+
+    expected_password = st.secrets.get("APP_PASSWORD", None)
+
+    st.markdown(
+        """
+        <div class="login-shell">
+            <div class="hero" style="margin-bottom:0.9rem;">
+                <h2>IVIFS-BWM-CoCoSo Toolkit</h2>
+                <p class="hero-sub">
+                    Secure access to a decision analytics workspace for IVIFS-BWM optimization and IVIFS-CoCoSo ranking.
+                </p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="login-shell"><div class="login-card">', unsafe_allow_html=True)
+    st.markdown("### Sign in")
+    st.caption("Enter the application password to continue.")
+
+    if expected_password is None:
+        st.error(
+            "APP_PASSWORD is not configured. Add it in Streamlit secrets "
+            "(.streamlit/secrets.toml locally or Settings → Secrets on Streamlit Cloud)."
+        )
+        st.markdown("</div></div>", unsafe_allow_html=True)
+        return False
+
+    with st.form("login_form", clear_on_submit=False):
+        password = st.text_input("Password", type="password", placeholder="Enter password")
+        submitted = st.form_submit_button("Log in", use_container_width=True)
+
+    if submitted:
+        if hmac.compare_digest(password, str(expected_password)):
+            st.session_state.authenticated = True
+            st.success("Access granted.")
+            st.rerun()
+        else:
+            st.error("Incorrect password.")
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
+    return False
+
 # =========================================================
 # IT2TrFS REPRESENTATION
 #   IT2 = (UMF, LMF)
@@ -1416,6 +1574,15 @@ def main():
     st.set_page_config(page_title="IT2TrFS-Delphi - WINGS - CoCoSo Toolkit", layout="wide")
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Choose a Module", ["IT2TrFS-Delphi", "IT2TrFS-WINGS", "IT2TrFS-CoCoSo"])
+st.markdown("---")
+        st.success("Authenticated")
+        st.button(
+            "Logout",
+            icon=":material/logout:",
+            on_click=logout,
+            use_container_width=True,
+            type="primary",
+        )
 
     if page == "IT2TrFS-Delphi":
         delphi_app()
