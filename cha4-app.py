@@ -655,9 +655,9 @@ def render_workspace_banner():
         """
         <div class="suite-hero">
             <div class="suite-hero-top">
-                <div class="suite-hero-title">🧠 IT2TrFS MCDM Suite</div>
+                <div class="suite-hero-title">🧠 Integrated IT2TrFS-Delphi-WINGS-CoCoSo MCDM Suite</div>
                 <div class="suite-hero-subtitle">
-                    A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
+                    An intelligent decision analytics tool integrated for IT2TrFS-Delphi, IT2TrFS-WINGS, and IT2TrFS-CoCoSo.
                 </div>
             </div>
         </div>
@@ -671,7 +671,7 @@ def render_workspace_banner():
         st.markdown(
             """
             <div class="suite-native-card">
-                <div class="suite-native-title">📘 Delphi</div>
+                <div class="suite-native-title">📘 IT2TrFS-Delphi</div>
                 <div class="suite-native-text">
                     Screen and validate criteria from expert responses using IT2TrFS-based Delphi analysis.
                 </div>
@@ -684,7 +684,7 @@ def render_workspace_banner():
         st.markdown(
             """
             <div class="suite-native-card">
-                <div class="suite-native-title">🕸️ WINGS</div>
+                <div class="suite-native-title">🕸️ IT2TrFS-WINGS</div>
                 <div class="suite-native-text">
                     Explore causal interactions, influence structure, and normalized weights among components.
                 </div>
@@ -697,7 +697,7 @@ def render_workspace_banner():
         st.markdown(
             """
             <div class="suite-native-card">
-                <div class="suite-native-title">📊 CoCoSo</div>
+                <div class="suite-native-title">📊 IT2TrFS-CoCoSo</div>
                 <div class="suite-native-text">
                     Rank alternatives using linguistic judgments, normalization, and compromise solution logic.
                 </div>
@@ -1592,7 +1592,7 @@ def wings_app():
 # ============================================================
 def main():
     page = st.sidebar.radio(
-        "Navigate",
+        "Navigate (Select Module)",
         ["IT2TrFS-Delphi", "IT2TrFS-WINGS", "IT2TrFS-CoCoSo"],
     )
 
