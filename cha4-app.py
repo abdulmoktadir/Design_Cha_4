@@ -1,4 +1,5 @@
 import math
+import base64
 import hmac
 from pathlib import Path
 from html import escape
@@ -295,44 +296,139 @@ h1, h2, h3 {
 }
 
 .sidebar-section-title {
-    color: #e6edf7 !important;
+    color: #f8fbff !important;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.11em;
     margin: 0.35rem 0 0.75rem 0;
 }
 
-.sidebar-profile-card {
-    background: rgba(255, 255, 255, 0.06);
+.sidebar-section-note {
+    color: #aac0db !important;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: 0 0 0.85rem 0;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] > details {
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 16px;
-    padding: 0.9rem;
+    overflow: hidden;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] summary {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] summary:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] summary p,
+[data-testid="stSidebar"] div[data-testid="stExpander"] summary svg {
+    color: #f8fbff !important;
+    fill: #f8fbff !important;
+    font-weight: 700 !important;
+}
+
+.sidebar-profile-card {
+    background: linear-gradient(180deg, rgba(19, 36, 67, 0.98) 0%, rgba(14, 28, 53, 0.98) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 18px;
+    padding: 1rem;
+    margin: 0.1rem 0 0.9rem 0;
+    box-shadow: 0 14px 28px rgba(2, 8, 23, 0.28);
+}
+
+.sidebar-profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #dbeafe !important;
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(147, 197, 253, 0.22);
+    border-radius: 999px;
+    padding: 0.26rem 0.58rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+}
+
+.sidebar-profile-image-frame {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     margin-bottom: 0.85rem;
-    backdrop-filter: blur(6px);
+}
+
+.sidebar-profile-image {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.sidebar-profile-image-placeholder {
+    padding: 1.1rem 0.85rem;
+    text-align: center;
+    color: #dbe7f5 !important;
+    font-size: 0.78rem;
 }
 
 .sidebar-profile-name {
-    color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 700;
-    margin-top: 0.55rem;
-    margin-bottom: 0.18rem;
+    color: #ffffff !important;
+    font-size: 1.08rem;
+    font-weight: 800;
+    margin: 0 0 0.18rem 0;
     line-height: 1.35;
 }
 
 .sidebar-profile-role {
-    color: #cbd5e1;
-    font-size: 0.78rem;
-    line-height: 1.35;
-    margin-bottom: 0.45rem;
+    color: #c7ddff !important;
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1.45;
+    margin-bottom: 0.16rem;
+}
+
+.sidebar-profile-institution {
+    color: #e5eefb !important;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin-bottom: 0.62rem;
+}
+
+.sidebar-profile-text,
+.sidebar-profile-bullet,
+.sidebar-profile-bio {
+    color: #d9e5f5 !important;
+    font-size: 0.8rem;
+    line-height: 1.65;
 }
 
 .sidebar-profile-text {
-    color: #94a3b8;
-    font-size: 0.76rem;
-    line-height: 1.5;
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.55rem;
+}
+
+.sidebar-profile-bullet {
+    margin-bottom: 0.22rem;
+}
+
+.sidebar-profile-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 0.72rem 0 0.68rem 0;
 }
 
 .login-page {
@@ -761,36 +857,62 @@ def get_asset_path(filename: str) -> Path:
     return Path(__file__).parent / "assets" / filename
 
 
-def render_sidebar_profile_card(name, role, institution, image_path, brief_text, full_bio=None, extras=None):
-    st.markdown('<div class="sidebar-profile-card">', unsafe_allow_html=True)
-
+def get_image_data_uri(image_path: Path) -> str | None:
     image_path = Path(image_path)
-    if image_path.exists():
-        st.image(str(image_path), use_container_width=True)
+    if not image_path.exists():
+        return None
+
+    suffix = image_path.suffix.lower()
+    mime = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }.get(suffix, "image/png")
+    encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+    return f"data:{mime};base64,{encoded}"
+
+
+def render_sidebar_profile_card(name, role, institution, image_path, brief_text, full_bio=None, extras=None, tag="Researcher"):
+    safe_name = escape(name)
+    safe_role = escape(role)
+    safe_institution = escape(institution)
+    safe_brief = escape(brief_text)
+    safe_tag = escape(tag)
+    image_uri = get_image_data_uri(Path(image_path))
+
+    if image_uri:
+        image_html = f'<img class="sidebar-profile-image" src="{image_uri}" alt="{safe_name}">'
     else:
-        st.caption(f"Image not found: {image_path.name}")
+        image_html = '<div class="sidebar-profile-image-placeholder">Profile image not available</div>'
+
+    extras_html = ""
+    if extras:
+        extras_html = '<div class="sidebar-profile-divider"></div>' + "".join(
+            f'<div class="sidebar-profile-bullet">• {escape(item)}</div>' for item in extras
+        )
 
     st.markdown(
         f"""
-        <div class="sidebar-profile-name">{name}</div>
-        <div class="sidebar-profile-role">{role}<br>{institution}</div>
-        <div class="sidebar-profile-text">{brief_text}</div>
+        <div class="sidebar-profile-card">
+            <div class="sidebar-profile-badge">👤 {safe_tag}</div>
+            <div class="sidebar-profile-image-frame">{image_html}</div>
+            <div class="sidebar-profile-name">{safe_name}</div>
+            <div class="sidebar-profile-role">{safe_role}</div>
+            <div class="sidebar-profile-institution">{safe_institution}</div>
+            <div class="sidebar-profile-text">{safe_brief}</div>
+            {extras_html}
+        </div>
         """,
         unsafe_allow_html=True,
     )
 
-    if extras:
-        for item in extras:
-            st.markdown(
-                f'<div class="sidebar-profile-text">• {item}</div>',
-                unsafe_allow_html=True,
-            )
-
     if full_bio:
         with st.expander(f"More about {name}", expanded=False):
-            st.write(full_bio)
-
-    st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="sidebar-profile-bio">{escape(full_bio)}</div>',
+                unsafe_allow_html=True,
+            )
 
 
 def render_sidebar_research_profiles():
@@ -799,44 +921,49 @@ def render_sidebar_research_profiles():
         '<div class="sidebar-section-title">Researcher Profiles</div>',
         unsafe_allow_html=True,
     )
+    st.sidebar.markdown(
+        '<div class="sidebar-section-note">Profiles are shown with higher-contrast styling for better readability.</div>',
+        unsafe_allow_html=True,
+    )
 
-    with st.sidebar.expander("👥 View researcher profiles", expanded=False):
-        render_sidebar_profile_card(
-            name="Prof. J.Z. Ren 任競爭",
-            role="Associate Professor",
-            institution="The Hong Kong Polytechnic University",
-            image_path=get_asset_path("prof_jz_ren.png"),
-            brief_text=(
-                "Process systems engineering for energy, environment, and sustainability; "
-                "recipient of the 2022 APEC ASPIRE Prize."
-            ),
-            full_bio=(
-                "Dr. Jingzheng Ren is an Associate Professor at The Hong Kong Polytechnic "
-                "University. His research focuses on process systems engineering for energy, "
-                "environment and sustainability, including innovative industrial processes, "
-                "decision tools, and optimization models for carbon-neutral industrial systems."
-            ),
-        )
+    render_sidebar_profile_card(
+        name="Prof. J.Z. Ren 任競爭",
+        role="Associate Professor",
+        institution="The Hong Kong Polytechnic University",
+        image_path=get_asset_path("prof_jz_ren.png"),
+        brief_text=(
+            "Process systems engineering for energy, environment, and sustainability; "
+            "recipient of the 2022 APEC ASPIRE Prize."
+        ),
+        full_bio=(
+            "Dr. Jingzheng Ren is an Associate Professor at The Hong Kong Polytechnic "
+            "University. His research focuses on process systems engineering for energy, "
+            "environment and sustainability, including innovative industrial processes, "
+            "decision tools, and optimization models for carbon-neutral industrial systems."
+        ),
+        tag="Lead Researcher",
+    )
 
-        render_sidebar_profile_card(
-            name="Md. Abdul Moktadir",
-            role="Assistant Professor (Leather Products Engineering)",
-            institution="University of Dhaka / PolyU Presidential PhD Fellow",
-            image_path=get_asset_path("abdul_moktadir.png"),
-            brief_text=(
-                "Research interests include sustainable supply chains, logistics, risk "
-                "management, Industry 4.0, and circular economy."
-            ),
-            extras=[
-                "Affiliation: University of Dhaka",
-                "Program: PolyU Presidential PhD Fellow",
-            ],
-            full_bio=(
-                "Md. Abdul Moktadir is pursuing a PhD in Industrial and Systems Engineering "
-                "at The Hong Kong Polytechnic University and serves as an Assistant Professor "
-                "of Leather Products Engineering at the University of Dhaka."
-            ),
-        )
+    render_sidebar_profile_card(
+        name="Md. Abdul Moktadir",
+        role="Assistant Professor (Leather Products Engineering)",
+        institution="University of Dhaka / PolyU Presidential PhD Fellow",
+        image_path=get_asset_path("abdul_moktadir.png"),
+        brief_text=(
+            "Research interests include sustainable supply chains, logistics, risk "
+            "management, Industry 4.0, and circular economy."
+        ),
+        extras=[
+            "Affiliation: University of Dhaka",
+            "Program: PolyU Presidential PhD Fellow",
+        ],
+        full_bio=(
+            "Md. Abdul Moktadir is pursuing a PhD in Industrial and Systems Engineering "
+            "at The Hong Kong Polytechnic University and serves as an Assistant Professor "
+            "of Leather Products Engineering at the University of Dhaka."
+        ),
+        tag="Co-Researcher",
+    )
 
 
 def render_footer():
