@@ -104,6 +104,121 @@ st.markdown("""
         color: #e2e8f0 !important;
         font-weight: 700;
     }
+    /* ===== Interactive suite hero ===== */
+    .suite-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 42%, #06b6d4 100%);
+        border-radius: 24px;
+        padding: 1.5rem 1.5rem 1.35rem 1.5rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 18px 40px rgba(29, 78, 216, 0.18);
+        border: 1px solid rgba(255,255,255,0.16);
+        overflow: hidden;
+        position: relative;
+    }
+    .suite-hero::before {
+        content: "";
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 70%);
+        border-radius: 50%;
+    }
+
+    .suite-hero::after {
+        content: "";
+        position: absolute;
+        bottom: -35px;
+        left: -35px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.01) 70%);
+        border-radius: 50%;
+    }
+
+    .suite-hero-top {
+        position: relative;
+        z-index: 1;
+    }
+
+    .suite-hero-title {
+        color: #ffffff;
+        font-size: 1.95rem;
+        font-weight: 800;
+        margin: 0 0 0.35rem 0;
+        letter-spacing: -0.03em;
+    }
+
+    .suite-hero-subtitle {
+        color: rgba(255,255,255,0.92);
+        font-size: 1rem;
+        line-height: 1.55;
+        max-width: 780px;
+        margin: 0 0 1rem 0;
+    }
+
+    .suite-card-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .suite-mini-card {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 18px;
+        padding: 0.9rem 0.95rem;
+        backdrop-filter: blur(8px);
+        transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+    }
+
+    .suite-mini-card:hover {
+        transform: translateY(-4px);
+        background: rgba(255,255,255,0.18);
+        box-shadow: 0 14px 26px rgba(15,23,42,0.14);
+    }
+
+    .suite-mini-title {
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 800;
+        margin-bottom: 0.2rem;
+    }
+
+    .suite-mini-text {
+        color: rgba(255,255,255,0.88);
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .suite-badge-row {
+        display: flex;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        margin-top: 0.85rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .suite-badge {
+        display: inline-block;
+        padding: 0.35rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.16);
+    }
+
+    @media (max-width: 900px) {
+        .suite-card-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
     [data-testid="stSidebar"] div[data-testid="stExpander"] details[open] > summary {
         background: linear-gradient(135deg, rgba(37,99,235,0.30), rgba(71,85,105,0.45));
@@ -608,21 +723,47 @@ def render_page_banner(title, subtitle, theme="default"):
 def render_workspace_banner():
     st.markdown(
         """
-        <div class="workspace-banner">
-            <div class="workspace-banner-title">🧠 IT2TrFS MCDM Suite</div>
-            <div class="workspace-banner-subtitle">
-                A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
+        <div class="suite-hero">
+            <div class="suite-hero-top">
+                <div class="suite-hero-title">🧠 IT2TrFS MCDM Suite</div>
+                <div class="suite-hero-subtitle">
+                    A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
+                </div>
             </div>
-            <div class="workspace-chip-wrap">
-                <span class="workspace-chip">Delphi</span>
-                <span class="workspace-chip">WINGS</span>
-                <span class="workspace-chip">CoCoSo</span>
+
+            <div class="suite-card-grid">
+                <div class="suite-mini-card">
+                    <div class="suite-mini-title">📘 Delphi</div>
+                    <div class="suite-mini-text">
+                        Screen and validate criteria from expert responses using IT2TrFS-based Delphi analysis.
+                    </div>
+                </div>
+
+                <div class="suite-mini-card">
+                    <div class="suite-mini-title">🕸️ WINGS</div>
+                    <div class="suite-mini-text">
+                        Explore causal interactions, influence structure, and normalized weights among components.
+                    </div>
+                </div>
+
+                <div class="suite-mini-card">
+                    <div class="suite-mini-title">📊 CoCoSo</div>
+                    <div class="suite-mini-text">
+                        Rank alternatives using linguistic judgments, normalization, and compromise solution logic.
+                    </div>
+                </div>
+            </div>
+
+            <div class="suite-badge-row">
+                <span class="suite-badge">Interactive</span>
+                <span class="suite-badge">Decision Analytics</span>
+                <span class="suite-badge">Excel Export</span>
+                <span class="suite-badge">Research Toolkit</span>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
 def dataframe_dict_to_excel_bytes(sheet_map):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
