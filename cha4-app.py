@@ -169,6 +169,62 @@ div[data-testid="stForm"] .stTextInput input { min-height:60px; font-size:1rem; 
 def apply_custom_styling():
     st.markdown(CSS, unsafe_allow_html=True)
 
+def _compact_name_editor(
+    panel_title: str,
+    item_label: str,
+    count: int,
+    state_key: str,
+    fallback_prefix: str,
+    default_names: Optional[List[str]] = None,
+    columns: int = 2,
+    preview_limit: int = 6,
+) -> List[str]:
+    defaults: List[str] = []
+    seed = default_names or []
+    for i in range(int(count)):
+        candidate = str(seed[i]).strip() if i < len(seed) else ''
+        defaults.append(candidate if candidate else f"{fallback_prefix}{i+1}")
+
+    prior = st.session_state.get(state_key, defaults)
+    if not isinstance(prior, list):
+        prior = defaults
+
+    normalized_prior: List[str] = []
+    for i in range(int(count)):
+        value = str(prior[i]).strip() if i < len(prior) else ''
+        normalized_prior.append(value if value else defaults[i])
+
+    preview_items = normalized_prior[:preview_limit]
+    preview = ', '.join(preview_items) if preview_items else '—'
+    if int(count) > preview_limit:
+        preview += ', ...'
+
+    st.markdown(f"#### {panel_title}")
+    sum1, sum2 = st.columns([1, 4])
+    with sum1:
+        st.metric('Count', int(count))
+    with sum2:
+        st.caption('Compact input mode keeps the page shorter. Current preview: ' + preview)
+
+    with st.expander(f"Edit {panel_title.lower()}", expanded=False):
+        st.caption('Blank entries will automatically fall back to default labels.')
+        cols = st.columns(max(1, int(columns)))
+        edited: List[str] = []
+        for i in range(int(count)):
+            with cols[i % len(cols)]:
+                edited.append(
+                    st.text_input(
+                        f"{item_label} {i+1}",
+                        value=normalized_prior[i],
+                        key=f"{state_key}_{count}_{i}",
+                    )
+                )
+
+    names = [str(edited[i]).strip() or defaults[i] for i in range(int(count))]
+    st.session_state[state_key] = names
+    return names
+
+
 
 def logout():
     st.session_state.authenticated = False
@@ -1373,14 +1429,24 @@ def page_expert_covariance_model():
     c1, c2 = st.columns(2)
 
     with c1:
-        expert_names = []
-        for i in range(n_experts):
-            expert_names.append(st.text_input(f"Expert {i+1}", value=f"Ex{i+1}", key=f"cov_expert_{i}"))
+        expert_names = _compact_name_editor(
+            "Expert names",
+            "Expert",
+            n_experts,
+            "cov_expert_names_compact",
+            "Ex",
+            columns=2,
+        )
 
     with c2:
-        dim_names = []
-        for j in range(n_dims):
-            dim_names.append(st.text_input(f"Dimension {j+1}", value=f"X{j+1}", key=f"cov_dim_{j}"))
+        dim_names = _compact_name_editor(
+            "Dimension names",
+            "Dimension",
+            n_dims,
+            "cov_dimension_names_compact",
+            "X",
+            columns=2,
+        )
 
     store_key = f"cov|{n_experts}|{n_dims}|{'|'.join(expert_names)}|{'|'.join(dim_names)}"
     if st.session_state.get("cov_store_key") != store_key:
@@ -1536,11 +1602,14 @@ def page_dfs_ahp():
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.subheader("Criteria names")
-    criteria = []
-    cols = st.columns(3)
-    for i in range(int(num_criteria)):
-        with cols[i % 3]:
-            criteria.append(st.text_input(f"Criterion {i+1}", value=f"KPI{i+1}", key=f"ahp_crit_{i}"))
+    criteria = _compact_name_editor(
+        "Criteria names",
+        "Criterion",
+        int(num_criteria),
+        "ahp_criteria_names_compact",
+        "KPI",
+        columns=3,
+    )
 
     store_key = f"ahp|{num_criteria}|{num_scenarios}|{num_experts}|" + "|".join(criteria)
     if st.session_state.get("ahp_store_key") != store_key:
@@ -1799,19 +1868,30 @@ def page_dfs_qfd():
     st.subheader("RC & MS names")
     c1, c2 = st.columns(2)
 
+    ahp_rc_defaults = []
+    if "qfd_rc_weight_df" in st.session_state:
+        ahp_rc_defaults = st.session_state["qfd_rc_weight_df"]["RC"].astype(str).tolist()
+
     with c1:
-        rc_names = []
-        ahp_rc_defaults = []
-        if "qfd_rc_weight_df" in st.session_state:
-            ahp_rc_defaults = st.session_state["qfd_rc_weight_df"]["RC"].astype(str).tolist()
-        for i in range(n_rc):
-            default = ahp_rc_defaults[i] if i < len(ahp_rc_defaults) else f"RC{i+1}"
-            rc_names.append(st.text_input(f"RC {i+1}", value=default, key=f"qfd_rc_name_{i}"))
+        rc_names = _compact_name_editor(
+            "Requirement criterion names",
+            "RC",
+            n_rc,
+            "qfd_rc_names_compact",
+            "RC",
+            default_names=ahp_rc_defaults,
+            columns=2,
+        )
 
     with c2:
-        ms_names = []
-        for j in range(n_ms):
-            ms_names.append(st.text_input(f"MS {j+1}", value=f"MS{j+1}", key=f"qfd_ms_name_{j}"))
+        ms_names = _compact_name_editor(
+            "Mitigation strategy names",
+            "MS",
+            n_ms,
+            "qfd_ms_names_compact",
+            "MS",
+            columns=2,
+        )
 
     st.subheader("DFS linguistic scale")
     scale = default_scale_uv()
@@ -2043,13 +2123,16 @@ def page_milp():
     selected_ids = [int(s.split()[-1]) for s in selected] if selected else ([1] if n_exp >= 1 else [])
 
     st.subheader("Mitigation strategy names")
-    cols = st.columns(3)
-    names = []
     ms_defaults = st.session_state.get("milp_ms_names", [])
-    for i in range(m):
-        with cols[i % 3]:
-            default = ms_defaults[i] if i < len(ms_defaults) else f"MS{i+1}"
-            names.append(st.text_input(f"Strategy {i+1}", value=default, key=f"milp_name_{i}"))
+    names = _compact_name_editor(
+        "Mitigation strategy names",
+        "Strategy",
+        m,
+        "milp_strategy_names_compact",
+        "MS",
+        default_names=ms_defaults,
+        columns=3,
+    )
 
     key = f"milp|{m}|{n_exp}|" + "|".join(names)
     if st.session_state.get("milp_store_key") != key:
