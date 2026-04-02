@@ -1013,6 +1013,47 @@ def make_square_df(names, fill=0.0):
     return pd.DataFrame(arr, index=safe_names, columns=safe_names)
 
 
+def _zero_square_diagonal(mat, size: Optional[int] = None) -> np.ndarray:
+    arr = np.array(mat, dtype=float, copy=True)
+    if arr.ndim == 0:
+        if size is None or size <= 0:
+            return np.zeros((0, 0), dtype=float)
+        arr = np.zeros((size, size), dtype=float)
+    elif arr.ndim == 1:
+        if size is None:
+            side = int(round(np.sqrt(arr.size))) if arr.size > 0 else 0
+            if side * side != arr.size:
+                side = arr.size
+        else:
+            side = int(size)
+        if side <= 0:
+            return np.zeros((0, 0), dtype=float)
+        out = np.zeros((side, side), dtype=float)
+        if arr.size == side * side:
+            out[:, :] = arr.reshape(side, side)
+        else:
+            upto = min(arr.size, side)
+            out[np.arange(upto), np.arange(upto)] = arr[:upto]
+        arr = out
+    elif arr.ndim >= 2:
+        rows = arr.shape[0]
+        cols = arr.shape[1]
+        if size is None:
+            side = min(rows, cols)
+        else:
+            side = int(size)
+        out = np.zeros((side, side), dtype=float)
+        if side > 0:
+            out[:min(rows, side), :min(cols, side)] = arr[:min(rows, side), :min(cols, side)]
+        arr = out
+
+    n = min(arr.shape[0], arr.shape[1])
+    if n > 0:
+        idx = np.arange(n)
+        arr[idx, idx] = 0.0
+    return arr
+
+
 def upper_triangle_only(mat: np.ndarray) -> np.ndarray:
     out = np.zeros_like(mat)
     n = mat.shape[0]
@@ -3332,14 +3373,22 @@ def page_milp():
             raise KeyError(f"Expert {eid} input block is missing from session state.")
 
         expert_payload = st.session_state["milp_avg_experts"][eid]
-        IC = expert_payload["IC_avg"]["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
-        IT = expert_payload["IT_avg"]["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+        IC_df = _milp_normalize_vector_df(expert_payload.get("IC_avg"), sy_names)
+        IT_df = _milp_normalize_vector_df(expert_payload.get("IT_avg"), sy_names)
+        sigma_df = _milp_normalize_square_df(expert_payload.get("sigma_avg"), sy_names)
+        tau_df = _milp_normalize_square_df(expert_payload.get("tau_avg"), sy_names)
 
-        sigma = expert_payload["sigma_avg"].apply(lambda col: col.map(lambda v: _to_float(v, 0.0))).to_numpy(dtype=float)
-        tau = expert_payload["tau_avg"].apply(lambda col: col.map(lambda v: _to_float(v, 0.0))).to_numpy(dtype=float)
+        expert_payload["IC_avg"] = IC_df
+        expert_payload["IT_avg"] = IT_df
+        expert_payload["sigma_avg"] = sigma_df
+        expert_payload["tau_avg"] = tau_df
+        st.session_state["milp_avg_experts"][eid] = expert_payload
 
-        np.fill_diagonal(sigma, 0.0)
-        np.fill_diagonal(tau, 0.0)
+        IC = IC_df["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+        IT = IT_df["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+        sigma = _zero_square_diagonal(sigma_df.to_numpy(dtype=float, copy=True), size=len(sy_names))
+        tau = _zero_square_diagonal(tau_df.to_numpy(dtype=float, copy=True), size=len(sy_names))
+
         sigma = upper_triangle_only(sigma)
         tau = upper_triangle_only(tau)
         return IC, IT, sigma, tau
@@ -3358,10 +3407,8 @@ def page_milp():
 
             IC = np.mean(np.stack(IC_list, axis=0), axis=0)
             IT = np.mean(np.stack(IT_list, axis=0), axis=0)
-            sigma = np.mean(np.stack(sigma_list, axis=0), axis=0)
-            tau = np.mean(np.stack(tau_list, axis=0), axis=0)
-            np.fill_diagonal(sigma, 0.0)
-            np.fill_diagonal(tau, 0.0)
+            sigma = _zero_square_diagonal(np.mean(np.stack(sigma_list, axis=0), axis=0), size=len(sy_names))
+            tau = _zero_square_diagonal(np.mean(np.stack(tau_list, axis=0), axis=0), size=len(sy_names))
             sigma = upper_triangle_only(sigma)
             tau = upper_triangle_only(tau)
             note = "Aggregated across experts by mean (direct averages)."
