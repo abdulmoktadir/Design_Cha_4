@@ -747,7 +747,7 @@ def render_delphi_results(clean_scores_df, summary_df, threshold):
 
     with t2:
         st.markdown("#### Cleaned response matrix")
-        clean_it2_df = clean_scores_df.copy().applymap(
+        clean_it2_df = clean_scores_df.copy().map(
             lambda x: format_it2(DELPHI_NUMERIC_SCALE[int(x)])
             if pd.notna(x) and int(x) in DELPHI_NUMERIC_SCALE else ""
         )
@@ -842,7 +842,7 @@ def delphi_app():
                     st.warning("No Delphi criteria columns selected.")
                 else:
                     response_block = df_raw.iloc[int(start_row) - 1:int(end_row)].copy()
-                    scores_df = response_block[criteria_cols].applymap(parse_loose_numeric)
+                    scores_df = response_block[criteria_cols].map(parse_loose_numeric)
                     scores_df = scores_df.where(scores_df.isin([1, 2, 3, 4, 5]), np.nan)
                     valid_rows = scores_df.notna().any(axis=1)
                     scores_df = scores_df.loc[valid_rows].reset_index(drop=True)
@@ -899,7 +899,7 @@ def delphi_app():
         )
 
         if st.button("✅ Run manual IT2TrFS-Delphi", type="primary", use_container_width=True, key="delphi_manual_run"):
-            clean_scores = edited_scores.applymap(parse_loose_numeric)
+            clean_scores = edited_scores.map(parse_loose_numeric)
             clean_scores = clean_scores.where(clean_scores.isin([1, 2, 3, 4, 5]), np.nan)
             _, summary_df = aggregate_it2_delphi_from_scores(clean_scores)
             render_delphi_results(clean_scores, summary_df, threshold_manual)
