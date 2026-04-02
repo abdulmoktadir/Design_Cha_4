@@ -1239,7 +1239,7 @@ def wings_app():
     "📊 IT2TrFS WINGS Method Analysis Platform",
     "IT2TrFS-WINGS module for causal analysis, interaction mapping, and weight derivation.",
     theme="orange"
-    )    
+)    
     tab_howto, tab_analysis = st.tabs(["📘 How to Use", "📊 Analysis"])
     with tab_howto:
         st.markdown("Use the sidebar to configure components/experts and run IT2TrFS-WINGS.")
