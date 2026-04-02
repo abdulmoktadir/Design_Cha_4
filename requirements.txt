@@ -1,5 +1,9 @@
 streamlit
-pandas
 numpy
-scipy
+pandas
 openpyxl
+streamlit-extras
+SciPy 
+graphviz
+plotly
+matplotlib
