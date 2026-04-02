@@ -1235,24 +1235,43 @@ def get_word_download_link(doc):
     return href
 
 def wings_app():
-   render_page_banner(
-    "📊 IT2TrFS WINGS Method Analysis Platform",
-    "IT2TrFS-WINGS module for causal analysis, interaction mapping, and weight derivation.",
-    theme="orange"
-)    
+    render_page_banner(
+        "📊 IT2TrFS WINGS Method Analysis Platform",
+        "IT2TrFS-WINGS module for causal analysis, interaction mapping, and weight derivation.",
+        theme="orange"
+    )
+
     tab_howto, tab_analysis = st.tabs(["📘 How to Use", "📊 Analysis"])
+
     with tab_howto:
         st.markdown("Use the sidebar to configure components/experts and run IT2TrFS-WINGS.")
         with st.expander("Linguistic Terms Reference"):
             col1, col2 = st.columns(2)
+
             with col1:
                 st.write("**Strength/Relevance Terms**")
-                strength_df = pd.DataFrame([{"Abbreviation": abbr, "Full Form": FULL_FORMS[abbr], "IT2TrFS": format_it2(it2)} for abbr, it2 in LINGUISTIC_TERMS["strength"].items()])
+                strength_df = pd.DataFrame([
+                    {
+                        "Abbreviation": abbr,
+                        "Full Form": FULL_FORMS[abbr],
+                        "IT2TrFS": format_it2(it2)
+                    }
+                    for abbr, it2 in LINGUISTIC_TERMS["strength"].items()
+                ])
                 st.dataframe(strength_df, hide_index=True, use_container_width=True)
+
             with col2:
                 st.write("**Influence Terms**")
-                infl_df = pd.DataFrame([{"Abbreviation": abbr, "Full Form": FULL_FORMS[abbr], "IT2TrFS": format_it2(it2)} for abbr, it2 in LINGUISTIC_TERMS["influence"].items()])
+                infl_df = pd.DataFrame([
+                    {
+                        "Abbreviation": abbr,
+                        "Full Form": FULL_FORMS[abbr],
+                        "IT2TrFS": format_it2(it2)
+                    }
+                    for abbr, it2 in LINGUISTIC_TERMS["influence"].items()
+                ])
                 st.dataframe(infl_df, hide_index=True, use_container_width=True)
+
     with tab_analysis:
         with st.sidebar:
             st.header("⚙️ IT2TrFS-WINGS Configuration")
