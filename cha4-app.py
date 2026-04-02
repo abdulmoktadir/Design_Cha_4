@@ -541,7 +541,7 @@ def render_sidebar_profile_card(name, role, institution, image_path, brief_text,
 def render_sidebar_research_profiles():
     st.sidebar.markdown("---")
     st.sidebar.markdown(
-        '<div class="sidebar-section-title">Research Profiles</div>',
+        '<div class="sidebar-section-title">Researcher Profiles</div>',
         unsafe_allow_html=True,
     )
 
