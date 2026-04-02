@@ -441,6 +441,26 @@ def _init_strat_inter_df(num_events: int) -> pd.DataFrame:
     return pd.DataFrame(columns=["ID", "Parents (e.g. S2,S3)", "Label"])
 
 
+def _ensure_strat_store(num_events: int) -> None:
+    base_cols = ["ID", "Label", "Value (%)"]
+    inter_cols = ["ID", "Parents (e.g. S2,S3)", "Label"]
+    strat_store_key = f"strat|{num_events}"
+    base_df = st.session_state.get("strat_base_df")
+    inter_df = st.session_state.get("strat_inter_df")
+
+    base_ok = isinstance(base_df, pd.DataFrame) and list(base_df.columns) == base_cols and len(base_df) == (num_events + 1)
+    inter_ok = isinstance(inter_df, pd.DataFrame) and all(col in inter_df.columns for col in inter_cols)
+
+    if st.session_state.get("strat_store_key") != strat_store_key or not base_ok or not inter_ok:
+        st.session_state["strat_store_key"] = strat_store_key
+        st.session_state["strat_base_df"] = _init_strat_base_df(num_events)
+        st.session_state["strat_inter_df"] = _init_strat_inter_df(num_events)
+        return
+
+    st.session_state["strat_base_df"] = base_df.loc[:, base_cols].copy()
+    st.session_state["strat_inter_df"] = inter_df.reindex(columns=inter_cols).copy()
+
+
 def page_stratification():
     render_module_banner("🧭", "Stratification Modeler", "Network-based stratification dashboard for base events, interaction scenarios, and probability propagation.", badge="Module 1")
 
@@ -451,11 +471,7 @@ def page_stratification():
     normalize = st.sidebar.checkbox("Normalize to 100%", value=True, key="strat_normalize")
     st.sidebar.info("Input Mode: Percentages (%)")
 
-    strat_store_key = f"strat|{num_events}"
-    if st.session_state.get("strat_store_key") != strat_store_key:
-        st.session_state["strat_store_key"] = strat_store_key
-        st.session_state["strat_base_df"] = _init_strat_base_df(num_events)
-        st.session_state["strat_inter_df"] = _init_strat_inter_df(num_events)
+    _ensure_strat_store(num_events)
 
     with st.expander("Calculation Methodology & Equations"):
         st.write("The model calculates the root scaling factor $P$ by solving for the point where the sum of all scenario probabilities equals 1.")
@@ -1306,27 +1322,30 @@ def compute_expected_matrix(df_O, df_ML, df_P):
 def page_expert_covariance_model():
     render_module_banner("👥", "Expert Weight Determination Model", "Covariance-based expert weighting with normalized data, covariance structure, and eigenvector-driven priority estimation.", badge="Module 2")
 
-    st.sidebar.subheader("Covariance model setup")
-    n_experts = int(
-        st.sidebar.number_input(
-            "Number of experts",
-            min_value=2,
-            max_value=100,
-            value=4,
-            step=1,
-            key="cov_n_experts",
+    st.markdown("### Configuration")
+    cfg1, cfg2 = st.columns(2)
+    with cfg1:
+        n_experts = int(
+            st.number_input(
+                "Number of experts",
+                min_value=2,
+                max_value=100,
+                value=4,
+                step=1,
+                key="cov_n_experts",
+            )
         )
-    )
-    n_dims = int(
-        st.sidebar.number_input(
-            "Number of dimensions",
-            min_value=2,
-            max_value=50,
-            value=10,
-            step=1,
-            key="cov_n_dims",
+    with cfg2:
+        n_dims = int(
+            st.number_input(
+                "Number of dimensions",
+                min_value=2,
+                max_value=50,
+                value=10,
+                step=1,
+                key="cov_n_dims",
+            )
         )
-    )
 
     st.subheader("Expert and dimension names")
     c1, c2 = st.columns(2)
@@ -1956,10 +1975,34 @@ def page_dfs_qfd():
 def page_milp():
     render_module_banner("🎯", "MILP Optimization", "Optimize the final strategy portfolio under budget and time constraints using expected values and pairwise savings effects.", badge="Module 5")
 
-    st.sidebar.subheader("MILP model size")
-    m = int(st.sidebar.number_input("Number of mitigation strategies (m)", min_value=2, max_value=20, value=9, step=1, key="milp_m"))
-    st.sidebar.subheader("Experts")
-    n_exp = int(st.sidebar.number_input("Number of experts", min_value=1, max_value=6, value=1, step=1, key="milp_ne"))
+    st.markdown("### Configuration")
+    cfg1, cfg2, cfg3, cfg4 = st.columns([1, 1, 1.15, 1.15])
+    with cfg1:
+        m = int(st.number_input("Number of mitigation strategies (m)", min_value=2, max_value=20, value=9, step=1, key="milp_m"))
+    with cfg2:
+        n_exp = int(st.number_input("Number of experts", min_value=1, max_value=6, value=1, step=1, key="milp_ne"))
+    with cfg3:
+        budget = st.number_input("Available budget δ", min_value=0.0, value=200000.0, step=1000.0, key="milp_budget")
+    with cfg4:
+        time_lim = st.number_input("Available time ∄ (months)", min_value=0.0, value=60.0, step=1.0, key="milp_time")
+
+    expert_choices = [f"Expert {i}" for i in range(1, n_exp + 1)]
+    cfg5, cfg6 = st.columns([1.6, 1.0])
+    with cfg5:
+        selected = st.multiselect(
+            "Experts to include",
+            options=expert_choices,
+            default=[expert_choices[0]] if expert_choices else [],
+            key="milp_sel",
+        )
+    with cfg6:
+        scale_savings = st.selectbox(
+            "Savings cost scaling",
+            ["Use as entered", "Multiply ρᵢⱼ by 1000"],
+            index=0,
+            key="milp_scale",
+        )
+    selected_ids = [int(s.split()[-1]) for s in selected] if selected else ([1] if n_exp >= 1 else [])
 
     st.subheader("Mitigation strategy names")
     cols = st.columns(3)
@@ -2002,29 +2045,7 @@ def page_milp():
         key="milp_rep_editor",
     )
 
-    st.sidebar.subheader("Aggregation")
-    expert_choices = [f"Expert {i}" for i in range(1, n_exp + 1)]
-    selected = st.sidebar.multiselect(
-        "Experts to include",
-        options=expert_choices,
-        default=[expert_choices[0]] if expert_choices else [],
-        key="milp_sel",
-    )
-    selected_ids = [int(s.split()[-1]) for s in selected] if selected else ([1] if n_exp >= 1 else [])
-
-    scale_savings = st.sidebar.selectbox(
-        "Savings cost scaling",
-        ["Use as entered", "Multiply ρᵢⱼ by 1000"],
-        index=0,
-        key="milp_scale",
-    )
-
-    st.subheader("Budget & time limits")
-    cA, cB = st.columns(2)
-    with cA:
-        budget = st.number_input("Available budget δ", min_value=0.0, value=200000.0, step=1000.0, key="milp_budget")
-    with cB:
-        time_lim = st.number_input("Available time ∄ (months)", min_value=0.0, value=60.0, step=1.0, key="milp_time")
+    st.caption("Configuration controls for this optimization model are shown here in the main workspace for easier review while editing inputs.")
 
     st.subheader("Enter expert O/ML/P data")
     st.info("Paste from Excel. For pairwise matrices fill ONLY upper triangle (i<j).")
