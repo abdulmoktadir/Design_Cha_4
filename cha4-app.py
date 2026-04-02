@@ -10,10 +10,9 @@ import matplotlib.pyplot as plt
 import re
 import hmac
 from pathlib import Path
-from textwrap import dedent
 
 # ============================================================
-# PAGE CONFIG (must be first Streamlit command)
+# PAGE CONFIG
 # ============================================================
 st.set_page_config(
     page_title="IT2TrFS MCDM Toolkit | Delphi · WINGS · CoCoSo",
@@ -23,7 +22,7 @@ st.set_page_config(
 )
 
 # ============================================================
-# PROFESSIONAL CSS STYLING
+# CSS STYLING
 # ============================================================
 st.markdown("""
 <style>
@@ -39,51 +38,118 @@ st.markdown("""
         background-color: #f8fafc;
     }
 
+    /* ===== Main workspace banner (right side / main body) ===== */
+    .workspace-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 50%, #06b6d4 100%);
+        border-radius: 22px;
+        padding: 1.35rem 1.45rem;
+        margin-bottom: 1.1rem;
+        box-shadow: 0 14px 32px rgba(29, 78, 216, 0.18);
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+    .workspace-banner-title {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin: 0 0 0.35rem 0;
+        letter-spacing: -0.03em;
+    }
+    .workspace-banner-subtitle {
+        color: rgba(255,255,255,0.92);
+        font-size: 0.98rem;
+        line-height: 1.55;
+        margin: 0 0 0.95rem 0;
+    }
+    .workspace-chip-wrap {
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .workspace-chip {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.34rem 0.78rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.14);
+        color: #ffffff;
+        border: 1px solid rgba(255,255,255,0.20);
+        backdrop-filter: blur(5px);
+    }
 
+    /* ===== Sidebar expander styling: blue / grey ===== */
+    [data-testid="stSidebar"] div[data-testid="stExpander"] {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 14px;
+        background: rgba(148, 163, 184, 0.08);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+    [data-testid="stSidebar"] div[data-testid="stExpander"] details {
+        border-radius: 14px;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary {
+        background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(71,85,105,0.34));
+        border-radius: 12px;
+        padding: 0.2rem 0.35rem;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary:hover {
+        background: linear-gradient(135deg, rgba(59,130,246,0.30), rgba(100,116,139,0.40));
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary p,
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary span {
+        color: #e2e8f0 !important;
+        font-weight: 700;
+    }
     /* ===== Interactive suite hero ===== */
     .suite-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 40%, #06b6d4 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 42%, #06b6d4 100%);
         border-radius: 24px;
-        padding: 1.55rem 1.55rem 1.35rem 1.55rem;
-        margin-bottom: 1.25rem;
+        padding: 1.5rem 1.5rem 1.35rem 1.5rem;
+        margin-bottom: 1.2rem;
         box-shadow: 0 18px 40px rgba(29, 78, 216, 0.18);
-        border: 1px solid rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.16);
         overflow: hidden;
         position: relative;
     }
     .suite-hero::before {
         content: "";
         position: absolute;
-        top: -42px;
-        right: -42px;
-        width: 190px;
-        height: 190px;
-        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 72%);
+        top: -40px;
+        right: -40px;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 70%);
         border-radius: 50%;
     }
+
     .suite-hero::after {
         content: "";
         position: absolute;
-        bottom: -42px;
-        left: -42px;
-        width: 165px;
-        height: 165px;
-        background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.01) 72%);
+        bottom: -35px;
+        left: -35px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.01) 70%);
         border-radius: 50%;
     }
-    .suite-hero-top,
-    .suite-card-grid,
-    .suite-badge-row {
+
+    .suite-hero-top {
         position: relative;
         z-index: 1;
     }
+
     .suite-hero-title {
         color: #ffffff;
-        font-size: 2rem;
+        font-size: 1.95rem;
         font-weight: 800;
         margin: 0 0 0.35rem 0;
         letter-spacing: -0.03em;
     }
+
     .suite-hero-subtitle {
         color: rgba(255,255,255,0.92);
         font-size: 1rem;
@@ -91,45 +157,55 @@ st.markdown("""
         max-width: 780px;
         margin: 0 0 1rem 0;
     }
+
     .suite-card-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.9rem;
+        gap: 0.85rem;
+        position: relative;
+        z-index: 1;
     }
+
     .suite-mini-card {
         background: rgba(255,255,255,0.12);
         border: 1px solid rgba(255,255,255,0.18);
         border-radius: 18px;
-        padding: 0.95rem 1rem;
+        padding: 0.9rem 0.95rem;
         backdrop-filter: blur(8px);
         transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
-        cursor: default;
     }
+
     .suite-mini-card:hover {
         transform: translateY(-4px);
         background: rgba(255,255,255,0.18);
         box-shadow: 0 14px 26px rgba(15,23,42,0.14);
     }
+
     .suite-mini-title {
         color: #ffffff;
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 800;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.2rem;
     }
+
     .suite-mini-text {
         color: rgba(255,255,255,0.88);
-        font-size: 0.83rem;
-        line-height: 1.48;
+        font-size: 0.82rem;
+        line-height: 1.45;
     }
+
     .suite-badge-row {
         display: flex;
         gap: 0.45rem;
         flex-wrap: wrap;
-        margin-top: 0.9rem;
+        margin-top: 0.85rem;
+        position: relative;
+        z-index: 1;
     }
+
     .suite-badge {
         display: inline-block;
-        padding: 0.36rem 0.75rem;
+        padding: 0.35rem 0.72rem;
         border-radius: 999px;
         font-size: 0.75rem;
         font-weight: 700;
@@ -137,10 +213,15 @@ st.markdown("""
         background: rgba(255,255,255,0.12);
         border: 1px solid rgba(255,255,255,0.16);
     }
+
     @media (max-width: 900px) {
         .suite-card-grid {
-            grid-template-columns: 1fr;
-        }
+        grid-template-columns: 1fr;
+    }
+}
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] details[open] > summary {
+        background: linear-gradient(135deg, rgba(37,99,235,0.30), rgba(71,85,105,0.45));
     }
 
     /* Sidebar */
@@ -287,34 +368,40 @@ st.markdown("""
         border-top: 1px solid #e2e8f0;
     }
 
-    /* Login page - compact and centered */
+        /* Login page - compact and centered */
     .login-page {
         max-width: 520px;
         margin: 2.5rem auto 0 auto;
         padding: 0 0.5rem 1rem 0.5rem;
     }
+
     .login-hero {
         text-align: center;
         margin-bottom: 1.25rem;
     }
+
     .login-hero h1 {
         font-size: 2.1rem;
         margin: 0 0 0.45rem 0;
         color: #0f172a;
         letter-spacing: -0.03em;
     }
+
     .login-hero p {
         margin: 0;
         color: #475569;
         font-size: 0.98rem;
         line-height: 1.55;
     }
+
     .login-form-note {
         text-align: center;
         color: #64748b;
         font-size: 0.86rem;
         margin-bottom: 0.9rem;
     }
+
+    /* Style the Streamlit form itself as the card */
     div[data-testid="stForm"] {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -322,6 +409,7 @@ st.markdown("""
         padding: 1.2rem 1.2rem 0.9rem 1.2rem;
         box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
     }
+
     div[data-testid="stForm"] [data-testid="stFormSubmitButton"] > button {
         width: 100%;
         margin-top: 0.35rem;
@@ -421,7 +509,39 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
     }
-
+    /* ===== Colorful page title box ===== */
+    .page-banner {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 55%, #ec4899 100%);
+        border-radius: 20px;
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1.15rem;
+        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.18);
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+    .page-banner-title {
+        color: white;
+        font-size: 1.65rem;
+        font-weight: 800;
+        margin: 0 0 0.3rem 0;
+        letter-spacing: -0.02em;
+    }
+    .page-banner-subtitle {
+        color: rgba(255,255,255,0.92);
+        font-size: 0.96rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    /* Optional alternate banner themes */
+    .page-banner.green {
+        background: linear-gradient(135deg, #059669 0%, #0ea5e9 55%, #2563eb 100%);
+    }
+    .page-banner.orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 55%, #ec4899 100%);
+    }
+    .page-banner.slate {
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -446,22 +566,20 @@ def check_password():
 
     with center:
         st.markdown(
-            dedent(
-                """
-                <div class="login-page">
-                    <div class="login-hero">
-                        <h1>IT2TrFS MCDM Toolkit</h1>
-                        <p>
-                            Secure access to a decision analytics workspace for
-                            IT2TrFS Delphi, WINGS &amp; CoCoSo.
-                        </p>
-                    </div>
-                    <div class="login-form-note">
-                        Sign in with the application password
-                    </div>
+            """
+            <div class="login-page">
+                <div class="login-hero">
+                    <h1>IT2TrFS MCDM Toolkit</h1>
+                    <p>
+                        Secure access to a decision analytics workspace for
+                        IT2TrFS Delphi, WINGS &amp; CoCoSo.
+                    </p>
                 </div>
-                """
-            ),
+                <div class="login-form-note">
+                    Sign in with the application password
+                </div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
@@ -489,6 +607,7 @@ def check_password():
                 st.error("Incorrect password.")
 
     return False
+
 
 # ============================================================
 # RESEARCHER PROFILE HELPERS
@@ -581,69 +700,82 @@ def render_sidebar_research_profiles():
             ),
         )
 
-
 def render_footer():
     st.markdown(
-        dedent(
-            """
-            <div class="app-footer">
-                © 2026 Developed by <strong>Moktadir M.A.</strong> and <strong>REN J.Z.</strong>
-            </div>
-            """
-        ),
+        """
+        <div class="app-footer">
+            © 2026 Developed by <strong>Moktadir M.A.</strong> and <strong>REN J.Z.</strong>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
-
-
+def render_page_banner(title, subtitle, theme="default"):
+    theme_class = "" if theme == "default" else f" {theme}"
+    st.markdown(
+        f"""
+        <div class="page-banner{theme_class}">
+            <div class="page-banner-title">{title}</div>
+            <div class="page-banner-subtitle">{subtitle}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 def render_workspace_banner():
     st.markdown(
-        dedent(
-            """
-            <div class="suite-hero">
-                <div class="suite-hero-top">
-                    <div class="suite-hero-title">🧠 IT2TrFS MCDM Suite</div>
-                    <div class="suite-hero-subtitle">
-                        A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
-                    </div>
-                </div>
-
-                <div class="suite-card-grid">
-                    <div class="suite-mini-card">
-                        <div class="suite-mini-title">📘 Delphi</div>
-                        <div class="suite-mini-text">
-                            Screen and validate criteria from expert responses using IT2TrFS-based Delphi analysis.
-                        </div>
-                    </div>
-
-                    <div class="suite-mini-card">
-                        <div class="suite-mini-title">🕸️ WINGS</div>
-                        <div class="suite-mini-text">
-                            Explore causal interactions, influence structure, and normalized weights among components.
-                        </div>
-                    </div>
-
-                    <div class="suite-mini-card">
-                        <div class="suite-mini-title">📊 CoCoSo</div>
-                        <div class="suite-mini-text">
-                            Rank alternatives using linguistic judgments, normalization, and compromise solution logic.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="suite-badge-row">
-                    <span class="suite-badge">Interactive</span>
-                    <span class="suite-badge">Decision Analytics</span>
-                    <span class="suite-badge">Excel Export</span>
-                    <span class="suite-badge">Research Toolkit</span>
+        """
+        <div class="suite-hero">
+            <div class="suite-hero-top">
+                <div class="suite-hero-title">🧠 IT2TrFS MCDM Suite</div>
+                <div class="suite-hero-subtitle">
+                    A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
                 </div>
             </div>
-            """
-        ),
+
+            <div class="suite-card-grid">
+                <div class="suite-mini-card">
+                    <div class="suite-mini-title">📘 Delphi</div>
+                    <div class="suite-mini-text">
+                        Screen and validate criteria from expert responses using IT2TrFS-based Delphi analysis.
+                    </div>
+                </div>
+
+                <div class="suite-mini-card">
+                    <div class="suite-mini-title">🕸️ WINGS</div>
+                    <div class="suite-mini-text">
+                        Explore causal interactions, influence structure, and normalized weights among components.
+                    </div>
+                </div>
+
+                <div class="suite-mini-card">
+                    <div class="suite-mini-title">📊 CoCoSo</div>
+                    <div class="suite-mini-text">
+                        Rank alternatives using linguistic judgments, normalization, and compromise solution logic.
+                    </div>
+                </div>
+            </div>
+
+            <div class="suite-badge-row">
+                <span class="suite-badge">Interactive</span>
+                <span class="suite-badge">Decision Analytics</span>
+                <span class="suite-badge">Excel Export</span>
+                <span class="suite-badge">Research Toolkit</span>
+            </div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
+def dataframe_dict_to_excel_bytes(sheet_map):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        for sheet_name, df in sheet_map.items():
+            safe_name = re.sub(r'[\\/*?:\\[\\]]', "", str(sheet_name))[:31] or "Sheet1"
+            export_df = df.copy()
+            export_df.to_excel(writer, index=False, sheet_name=safe_name)
+    output.seek(0)
+    return output.getvalue()
 
 # ============================================================
-# IT2TrFS REPRESENTATION (unchanged from original)
+# IT2TrFS REPRESENTATION
 # ============================================================
 def format_it2(it2):
     u, l = it2
@@ -728,7 +860,7 @@ def it2_score_components(it2):
     return score_u, score_l, crisp
 
 # ============================================================
-# IT2TrFS-CoCoSo linguistic scale & helpers (unchanged)
+# IT2TrFS-CoCoSo linguistic scale & helpers
 # ============================================================
 COCOSO_LINGUISTIC_TERMS = {
     "VP": ((0, 0, 0, 0.1, 1, 1), (0.05, 0, 0, 0.05, 0.9, 0.9)),
@@ -802,7 +934,7 @@ def format_it2_table(matrix_dict, alternatives, criteria, value_formatter=format
     return df
 
 # ============================================================
-# Delphi functions (unchanged)
+# Delphi functions
 # ============================================================
 DELPHI_NUMERIC_SCALE = {
     1: ((0, 0.1, 0.1, 0.1, 1, 1), (0.0, 0.1, 0.1, 0.05, 0.9, 0.9)),
@@ -917,7 +1049,7 @@ def format_delphi_scale_table():
 
 def render_delphi_results(clean_scores_df, summary_df, threshold):
     st.markdown("#### Cleaned response matrix")
-    clean_it2_df = clean_scores_df.copy().applymap(lambda x: format_it2(DELPHI_NUMERIC_SCALE[int(x)]) if pd.notna(x) and int(x) in DELPHI_NUMERIC_SCALE else "")
+    clean_it2_df = clean_scores_df.copy().map(lambda x: format_it2(DELPHI_NUMERIC_SCALE[int(x)]) if pd.notna(x) and int(x) in DELPHI_NUMERIC_SCALE else "")
     st.dataframe(clean_it2_df, use_container_width=True)
     out = summary_df.copy()
     out["Aggregated IT2TrFS"] = out.apply(lambda row: format_it2(((row["a"], row["b"], row["c"], row["d"], row["uh1"], row["uh2"]), (row["e"], row["f"], row["g"], row["h"], row["lh1"], row["lh2"]))), axis=1)
@@ -947,8 +1079,11 @@ def render_delphi_results(clean_scores_df, summary_df, threshold):
     return out, accepted
 
 def delphi_app():
-    st.title("📘 IT2TrFS-Delphi Screening Module")
-    st.write("Standalone IT2TrFS-Delphi module. No expert-weight input is used in this page.")
+    render_page_banner(
+    "📘 IT2TrFS-Delphi Screening Module",
+    "Standalone IT2TrFS-Delphi module. No expert-weight input is used in this page.",
+    theme="default"
+    )
     tab_howto, tab_excel, tab_manual = st.tabs(["📘 How to Use", "📂 Excel Upload", "✍️ Manual Entry"])
     with tab_howto:
         st.markdown("**What this page does**\n- Converts Delphi scores (1–5) into IT2TrFS values.\n- Aggregates responses criterion-wise using equal contribution from all valid respondents.\n- Computes Score(UMF), Score(LMF), and the final crisp score.\n- Screens criteria using a user-defined acceptance threshold.")
@@ -975,7 +1110,7 @@ def delphi_app():
                     st.warning("No Delphi criteria columns selected.")
                 else:
                     response_block = df_raw.iloc[int(start_row) - 1:int(end_row)].copy()
-                    scores_df = response_block[criteria_cols].applymap(parse_loose_numeric)
+                    scores_df = response_block[criteria_cols].map(parse_loose_numeric)
                     scores_df = scores_df.where(scores_df.isin([1, 2, 3, 4, 5]), np.nan)
                     valid_rows = scores_df.notna().any(axis=1)
                     scores_df = scores_df.loc[valid_rows].reset_index(drop=True)
@@ -1008,17 +1143,20 @@ def delphi_app():
         st.markdown("**Manual Delphi score matrix (1–5)**")
         edited_scores = st.data_editor(st.session_state.delphi_manual_df, use_container_width=True, column_config={c: st.column_config.NumberColumn(c, min_value=1, max_value=5, step=1, format="%d") for c in criteria_names}, key="delphi_manual_editor")
         if st.button("✅ Run manual IT2TrFS-Delphi", type="primary", use_container_width=True, key="delphi_manual_run"):
-            clean_scores = edited_scores.applymap(parse_loose_numeric)
+            clean_scores = edited_scores.map(parse_loose_numeric)
             clean_scores = clean_scores.where(clean_scores.isin([1, 2, 3, 4, 5]), np.nan)
             _, summary_df = aggregate_it2_delphi_from_scores(clean_scores)
             render_delphi_results(clean_scores, summary_df, threshold_manual)
 
 # ============================================================
-# CoCoSo App (unchanged)
+# CoCoSo App
 # ============================================================
 def cocoso_app():
-    st.header("📊 IT2TrFS-CoCoSo")
-    st.caption("Normalization uses δ⁺ (max) for Benefit and δ⁻ (min) for Cost")
+    render_page_banner(
+    "📊 IT2TrFS-CoCoSo",
+    "Normalization uses δ⁺ (max) for Benefit and δ⁻ (min) for Cost.",
+    theme="green"
+    )
     with st.expander("Linguistic scale (VP…VG)"):
         scale_df = pd.DataFrame([{"Abbr": k, "Meaning": COCOSO_FULL[k], "IT2TrFS": format_it2(v)} for k, v in COCOSO_LINGUISTIC_TERMS.items()])
         st.dataframe(scale_df, hide_index=True, use_container_width=True)
@@ -1124,9 +1262,34 @@ def cocoso_app():
             dfK = dfK.sort_values("Rank").reset_index(drop=True)
             st.markdown("#### 3.5 Final CoCoSo indices & Rank")
             st.dataframe(dfK.style.format(precision=6), use_container_width=True, hide_index=True)
+                        # -------------------------
+            # Excel export for CoCoSo
+            # -------------------------
+            agg_export = format_it2_table(agg_matrix, alternatives, criteria).reset_index().rename(columns={"index": "Alternative"})
+            norm_export = format_it2_table(norm_matrix, alternatives, criteria).reset_index().rename(columns={"index": "Alternative"})
 
+            crisp_export = df_crisp.copy()
+            final_export = dfK.copy()
+
+            excel_bytes = dataframe_dict_to_excel_bytes({
+                "Aggregated Matrix": agg_export,
+                "Normalized Matrix": norm_export,
+                "SBi": sbi_df,
+                "PBi": pbi_df,
+                "Crisp Scores": crisp_export,
+                "Final Ranking": final_export,
+            })
+
+            st.download_button(
+                "⬇️ Download CoCoSo Results (Excel)",
+                data=excel_bytes,
+                file_name="it2trfs_cocoso_results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                key="cocoso_excel_download"
+            )
 # ============================================================
-# WINGS functions (unchanged)
+# WINGS functions
 # ============================================================
 LINGUISTIC_TERMS = {
     "strength": {"VLR": ((0, 0.1, 0.1, 0.1, 1, 1), (0.0, 0.1, 0.1, 0.05, 0.9, 0.9)),
@@ -1300,21 +1463,43 @@ def get_word_download_link(doc):
     return href
 
 def wings_app():
-    st.title("📊 IT2TrFS WINGS Method Analysis Platform")
-    st.write("IT2TrFS-WINGS module")
+    render_page_banner(
+        "📊 IT2TrFS WINGS Method Analysis Platform",
+        "IT2TrFS-WINGS module for causal analysis, interaction mapping, and weight derivation.",
+        theme="orange"
+    )
+
     tab_howto, tab_analysis = st.tabs(["📘 How to Use", "📊 Analysis"])
+
     with tab_howto:
         st.markdown("Use the sidebar to configure components/experts and run IT2TrFS-WINGS.")
         with st.expander("Linguistic Terms Reference"):
             col1, col2 = st.columns(2)
+
             with col1:
                 st.write("**Strength/Relevance Terms**")
-                strength_df = pd.DataFrame([{"Abbreviation": abbr, "Full Form": FULL_FORMS[abbr], "IT2TrFS": format_it2(it2)} for abbr, it2 in LINGUISTIC_TERMS["strength"].items()])
+                strength_df = pd.DataFrame([
+                    {
+                        "Abbreviation": abbr,
+                        "Full Form": FULL_FORMS[abbr],
+                        "IT2TrFS": format_it2(it2)
+                    }
+                    for abbr, it2 in LINGUISTIC_TERMS["strength"].items()
+                ])
                 st.dataframe(strength_df, hide_index=True, use_container_width=True)
+
             with col2:
                 st.write("**Influence Terms**")
-                infl_df = pd.DataFrame([{"Abbreviation": abbr, "Full Form": FULL_FORMS[abbr], "IT2TrFS": format_it2(it2)} for abbr, it2 in LINGUISTIC_TERMS["influence"].items()])
+                infl_df = pd.DataFrame([
+                    {
+                        "Abbreviation": abbr,
+                        "Full Form": FULL_FORMS[abbr],
+                        "IT2TrFS": format_it2(it2)
+                    }
+                    for abbr, it2 in LINGUISTIC_TERMS["influence"].items()
+                ])
                 st.dataframe(infl_df, hide_index=True, use_container_width=True)
+
     with tab_analysis:
         with st.sidebar:
             st.header("⚙️ IT2TrFS-WINGS Configuration")
@@ -1452,25 +1637,6 @@ def wings_app():
 # MAIN NAVIGATION
 # ============================================================
 def main():
-    st.sidebar.markdown(
-        dedent(
-            """
-            <div class="sidebar-brand">
-                <h2>🧠 IT2TrFS MCDM Suite</h2>
-                <p>
-                    A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
-                </p>
-                <div class="sidebar-chip-wrap">
-                    <span class="sidebar-chip">Delphi</span>
-                    <span class="sidebar-chip">WINGS</span>
-                    <span class="sidebar-chip">CoCoSo</span>
-                </div>
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
-    )
-
     page = st.sidebar.radio(
         "Navigate",
         ["IT2TrFS-Delphi", "IT2TrFS-WINGS", "IT2TrFS-CoCoSo"],
@@ -1482,6 +1648,7 @@ def main():
         logout()
         st.rerun()
 
+    # Main-body suite banner (right side)
     render_workspace_banner()
 
     if page == "IT2TrFS-Delphi":
