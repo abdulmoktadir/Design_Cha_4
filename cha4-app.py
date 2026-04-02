@@ -92,32 +92,32 @@ st.markdown("""
     }
 
     .suite-native-card {
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.18);
-        border-radius: 18px;
-        padding: 0.95rem 1rem;
-        backdrop-filter: blur(8px);
-        min-height: 132px;
-        transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
-    }
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    padding: 1rem 1rem;
+    min-height: 132px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+   }
 
     .suite-native-card:hover {
         transform: translateY(-4px);
-        background: rgba(255,255,255,0.18);
-        box-shadow: 0 14px 26px rgba(15,23,42,0.14);
+        box-shadow: 0 16px 28px rgba(15, 23, 42, 0.10);
+        border-color: #93c5fd;
     }
 
     .suite-native-title {
-        color: #ffffff;
+        color: #0f172a;
         font-size: 1rem;
         font-weight: 800;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.35rem;
     }
 
     .suite-native-text {
-        color: rgba(255,255,255,0.88);
-        font-size: 0.83rem;
-        line-height: 1.48;
+        color: #475569;
+        font-size: 0.86rem;
+        line-height: 1.5;
     }
 
     .suite-badge-row {
