@@ -12,7 +12,7 @@ import hmac
 from pathlib import Path
 
 # ============================================================
-# PAGE CONFIG (must be first Streamlit command)
+# PAGE CONFIG
 # ============================================================
 st.set_page_config(
     page_title="IT2TrFS MCDM Toolkit | Delphi · WINGS · CoCoSo",
@@ -22,194 +22,188 @@ st.set_page_config(
 )
 
 # ============================================================
-# PROFESSIONAL CSS STYLING
+# CSS STYLING
 # ============================================================
 st.markdown("""
 <style>
-    /* Import modern font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    * {
+    html, body, [class*="css"]  {
         font-family: 'Inter', sans-serif;
     }
 
-    /* Main background */
     .stApp {
-        background-color: #f8fafc;
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     }
 
-    /* Sidebar */
+    /* ===== Sidebar ===== */
     [data-testid="stSidebar"] {
-        background-color: #0f172a;
-        border-right: none;
+        background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+        border-right: 1px solid rgba(255,255,255,0.06);
     }
-    [data-testid="stSidebar"] .sidebar-content {
-        padding: 1.5rem 1rem;
-    }
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3,
+
     [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] label,
     [data-testid="stSidebar"] .stRadio label,
-    [data-testid="stSidebar"] .stButton > button {
-        color: #f1f5f9 !important;
-    }
-    [data-testid="stSidebar"] .stRadio label div {
-        color: #f1f5f9;
-    }
-    [data-testid="stSidebar"] .stRadio label:hover {
-        background-color: #1e293b;
-        border-radius: 8px;
-    }
-    [data-testid="stSidebar"] .stSuccess {
-        background-color: #1e293b;
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div {
         color: #e2e8f0;
     }
+
     [data-testid="stSidebar"] .stButton > button {
-        background-color: transparent;
-        border: 1px solid #94a3b8;
-        color: #f1f5f9;
-        border-radius: 8px;
-    }
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background-color: #3b82f6;
-        border-color: #3b82f6;
-    }
-
-    /* Sidebar profile cards (compact) */
-    .sidebar-profile-card {
-        background: #1e293b;
-        border-radius: 12px;
-        padding: 0.8rem;
-        margin: 0.75rem 0;
+        border-radius: 10px;
         border: 1px solid #334155;
-        transition: all 0.2s;
-    }
-    .sidebar-profile-name {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #ffffff;
-        margin-top: 0.3rem;
-        margin-bottom: 0.1rem;
-    }
-    .sidebar-profile-role {
-        font-size: 0.7rem;
-        color: #94a3b8;
-        line-height: 1.3;
-    }
-    .sidebar-profile-mini {
-        font-size: 0.7rem;
-        color: #cbd5e1;
-        margin-top: 0.3rem;
-    }
-    .sidebar-section-title {
-        font-size: 0.9rem;
+        background: rgba(255,255,255,0.04);
+        color: #f8fafc;
         font-weight: 600;
-        color: #f1f5f9;
-        margin: 0.75rem 0 0.5rem;
-        padding-bottom: 0.25rem;
-        border-bottom: 1px solid #334155;
     }
 
-    /* Cards – subtle and clean */
-    .app-card, .inventor-card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid #eef2f6;
-        transition: all 0.2s;
-    }
-    .app-card h4, .inventor-card h4 {
-        margin-top: 0;
-        margin-bottom: 0.75rem;
-        color: #1e2a3e;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-
-    /* Headers */
-    h1, h2, h3 {
-        color: #0f172a;
-        font-weight: 600;
-        letter-spacing: -0.3px;
-    }
-    h1 { font-size: 2rem; margin-bottom: 0.25rem; }
-    h2 { font-size: 1.5rem; margin-top: 1.5rem; margin-bottom: 1rem; }
-    h3 { font-size: 1.25rem; }
-
-    /* Buttons */
-    .stButton > button {
-        border-radius: 8px;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        transition: all 0.2s;
-    }
-    .stButton > button[kind="primary"] {
-        background-color: #3b82f6;
-        border: none;
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: #2563eb;
+        border-color: #2563eb;
         color: white;
     }
-    .stButton > button[kind="primary"]:hover {
-        background-color: #2563eb;
-        box-shadow: 0 2px 6px rgba(59,130,246,0.2);
+
+    [data-testid="stSidebar"] .stRadio > div {
+        gap: 0.3rem;
     }
 
-    /* DataFrames & Editors */
-    .stDataFrame, .stDataEditor {
-        border-radius: 12px;
-        overflow: hidden;
+    /* ===== Main content cards ===== */
+    .hero-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
         border: 1px solid #e2e8f0;
-    }
-    .stDataFrame thead tr th, .stDataEditor thead tr th {
-        background-color: #f8fafc;
-        font-weight: 600;
-        color: #1e2a3e;
-        padding: 0.75rem 1rem;
+        border-radius: 18px;
+        padding: 1.4rem 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
     }
 
-    /* Metrics */
-    .stMetric {
-        background: #f8fafc;
-        border-radius: 12px;
-        padding: 0.8rem;
-        text-align: center;
-        border: 1px solid #eef2f6;
+    .hero-title {
+        font-size: 1.9rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.35rem;
+        letter-spacing: -0.03em;
     }
 
-    /* Footer */
+    .hero-subtitle {
+        color: #475569;
+        font-size: 0.98rem;
+        line-height: 1.5;
+    }
+
+    .app-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 1.2rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+    }
+
+    .app-card h4 {
+        margin: 0 0 0.65rem 0;
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    /* ===== Sidebar researcher cards ===== */
+    .sidebar-profile-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 0.85rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .sidebar-profile-name {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-top: 0.45rem;
+        margin-bottom: 0.2rem;
+        line-height: 1.3;
+    }
+
+    .sidebar-profile-role {
+        font-size: 0.82rem;
+        color: #cbd5e1;
+        margin-bottom: 0.45rem;
+        line-height: 1.4;
+    }
+
+    .sidebar-profile-text {
+        font-size: 0.78rem;
+        color: #e2e8f0;
+        line-height: 1.45;
+    }
+
+    .sidebar-section-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin: 0.5rem 0 0.75rem 0;
+        letter-spacing: 0.02em;
+    }
+
+    .sidebar-divider {
+        height: 1px;
+        background: rgba(255,255,255,0.10);
+        margin: 1rem 0;
+    }
+
+    /* ===== Tables / metric polish ===== */
+    .stDataFrame, .stDataEditor {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #dbe4ee;
+        box-shadow: 0 4px 14px rgba(15,23,42,0.03);
+    }
+
+    div[data-testid="metric-container"] {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 0.8rem 0.9rem;
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(15,23,42,0.03);
+    }
+
     .app-footer {
         text-align: center;
-        margin-top: 2.5rem;
+        margin-top: 2rem;
         padding: 1rem;
         color: #64748b;
-        font-size: 0.75rem;
+        font-size: 0.78rem;
         border-top: 1px solid #e2e8f0;
     }
 
-    /* Login screen */
     .login-shell {
         display: flex;
         justify-content: center;
         align-items: center;
         min-height: 70vh;
     }
+
     .login-card {
         background: white;
-        border-radius: 20px;
+        border-radius: 22px;
         padding: 2rem;
         width: 100%;
-        max-width: 420px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        max-width: 430px;
+        box-shadow: 0 16px 40px rgba(15,23,42,0.08);
         border: 1px solid #e2e8f0;
     }
+
     .hero h2 {
-        font-size: 1.8rem;
+        font-size: 1.85rem;
         margin-bottom: 0.5rem;
     }
+
     .hero-sub {
         color: #475569;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -273,62 +267,103 @@ def check_password():
     return False
 
 # ============================================================
-# RESEARCHER PROFILE HELPERS (adapted for sidebar)
+# RESEARCHER PROFILE HELPERS
 # ============================================================
 def get_asset_path(filename):
     """Resolve image file path from 'assets' folder."""
     return Path(__file__).parent / "assets" / filename
 
+def render_page_header(title, subtitle):
+    st.markdown(
+        f"""
+        <div class="hero-card">
+            <div class="hero-title">{title}</div>
+            <div class="hero-subtitle">{subtitle}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-def render_sidebar_profiles():
-    """Render compact researcher profiles in the sidebar."""
-    st.markdown('<div class="sidebar-section-title">👥 Researchers</div>', unsafe_allow_html=True)
+def render_sidebar_profile_card(name, role, institution, image_path, brief_text, full_bio=None, extras=None):
+    st.sidebar.markdown('<div class="sidebar-profile-card">', unsafe_allow_html=True)
 
-    # Profile 1: Prof. J.Z. Ren
-    with st.container():
-        st.markdown('<div class="sidebar-profile-card">', unsafe_allow_html=True)
-        img_path = get_asset_path("prof_jz_ren.png")
-        if img_path.exists():
-            st.image(str(img_path), use_container_width=True)
-        else:
-            st.warning("Image missing")
-        st.markdown(
-            '<div class="sidebar-profile-name">Prof. J.Z. Ren</div>'
-            '<div class="sidebar-profile-role">Associate Professor<br>PolyU</div>'
-            '<div class="sidebar-profile-mini">Energy, environment, sustainability systems</div>',
-            unsafe_allow_html=True,
-        )
-        with st.expander("Read more"):
-            st.markdown(
-                "Dr. Jingzheng Ren is an Associate Professor at PolyU. His research focuses on "
-                "process systems engineering for energy, environment and sustainability. "
-                "Awarded the 2022 APEC ASPIRE Prize."
+    if Path(image_path).exists():
+        st.sidebar.image(str(image_path), use_container_width=True)
+    else:
+        st.sidebar.caption(f"Image not found: {image_path}")
+
+    st.sidebar.markdown(
+        f"""
+        <div class="sidebar-profile-name">{name}</div>
+        <div class="sidebar-profile-role">{role}<br>{institution}</div>
+        <div class="sidebar-profile-text">{brief_text}</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if extras:
+        for item in extras:
+            st.sidebar.markdown(
+                f'<div class="sidebar-profile-text">• {item}</div>',
+                unsafe_allow_html=True,
             )
-        st.markdown('</div>', unsafe_allow_html=True)
 
-    # Profile 2: Md. Abdul Moktadir
-    with st.container():
-        st.markdown('<div class="sidebar-profile-card">', unsafe_allow_html=True)
-        img_path = get_asset_path("abdul_moktadir.png")
-        if img_path.exists():
-            st.image(str(img_path), use_container_width=True)
-        else:
-            st.warning("Image missing")
-        st.markdown(
-            '<div class="sidebar-profile-name">Md. Abdul Moktadir</div>'
-            '<div class="sidebar-profile-role">Assistant Professor<br>Univ. of Dhaka / PolyU Fellow</div>'
-            '<div class="sidebar-profile-mini">Sustainable supply chains, circular economy, Industry 4.0</div>',
-            unsafe_allow_html=True,
-        )
-        with st.expander("Read more"):
-            st.markdown(
-                "Md. Abdul Moktadir is a PhD researcher at PolyU and Assistant Professor at the "
-                "University of Dhaka. His work focuses on sustainable supply chains, risk management, "
-                "and circular economy."
-            )
-        st.markdown('</div>', unsafe_allow_html=True)
+    if full_bio:
+        with st.sidebar.expander(f"View profile: {name}", expanded=False):
+            st.write(full_bio)
+
+    st.sidebar.markdown("</div>", unsafe_allow_html=True)
 
 
+def render_inventor_profiles_sidebar():
+    st.sidebar.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-section-title">Researcher Profiles</div>', unsafe_allow_html=True)
+
+    render_sidebar_profile_card(
+        name="Prof. J.Z. Ren 任競爭",
+        role="Associate Professor",
+        institution="The Hong Kong Polytechnic University",
+        image_path=get_asset_path("prof_jz_ren.png"),
+        brief_text=(
+            "Research focus: process systems engineering for energy, environment, and sustainability."
+        ),
+        full_bio=(
+            "Dr. Jingzheng Ren is currently an Associate Professor at The Hong Kong "
+            "Polytechnic University. His research focuses on process systems engineering "
+            "for energy, environment and sustainability, including innovative industrial "
+            "processes, decision-making tools, and optimization models for sustainable "
+            "and carbon-neutral industrial systems. He has published extensively and has "
+            "received major international recognition, including the 2022 APEC Science "
+            "Prize for Innovation, Research and Education (ASPIRE Prize)."
+        ),
+        extras=[
+            "Award: 2022 APEC ASPIRE Prize",
+        ],
+    )
+
+    render_sidebar_profile_card(
+        name="Md. Abdul Moktadir",
+        role="Assistant Professor (Leather Products Engineering)",
+        institution="University of Dhaka / PolyU Presidential PhD Fellow",
+        image_path=get_asset_path("abdul_moktadir.png"),
+        brief_text=(
+            "Research interests include sustainable supply chains, logistics, risk management, Industry 4.0, and circular economy."
+        ),
+        extras=[
+            "Affiliation: University of Dhaka",
+            "Program: PolyU Presidential PhD Fellow",
+        ],
+        full_bio=(
+            "Md. Abdul Moktadir is currently pursuing a PhD in Industrial and Systems "
+            "Engineering at The Hong Kong Polytechnic University. He also serves as an "
+            "Assistant Professor of Leather Products Engineering at the University of "
+            "Dhaka. His work has appeared in several international journals, and his "
+            "research interests include sustainable supply chain management, risk "
+            "management, energy-efficient supply chain planning and design, logistics, "
+            "Industry 4.0, and circular economy."
+        ),
+    )
+4) Update main() so profiles stay
 def render_footer():
     st.markdown(
         """
@@ -341,7 +376,7 @@ def render_footer():
 
 
 # ============================================================
-# IT2TrFS REPRESENTATION (unchanged)
+# IT2TrFS REPRESENTATION
 # ============================================================
 def format_it2(it2):
     u, l = it2
@@ -426,7 +461,7 @@ def it2_score_components(it2):
     return score_u, score_l, crisp
 
 # ============================================================
-# IT2TrFS-CoCoSo linguistic scale & helpers (unchanged)
+# IT2TrFS-CoCoSo linguistic scale & helpers
 # ============================================================
 COCOSO_LINGUISTIC_TERMS = {
     "VP": ((0, 0, 0, 0.1, 1, 1), (0.05, 0, 0, 0.05, 0.9, 0.9)),
@@ -500,7 +535,7 @@ def format_it2_table(matrix_dict, alternatives, criteria, value_formatter=format
     return df
 
 # ============================================================
-# Delphi functions (unchanged)
+# Delphi functions
 # ============================================================
 DELPHI_NUMERIC_SCALE = {
     1: ((0, 0.1, 0.1, 0.1, 1, 1), (0.0, 0.1, 0.1, 0.05, 0.9, 0.9)),
@@ -712,8 +747,8 @@ def delphi_app():
             render_delphi_results(clean_scores, summary_df, threshold_manual)
 
 # ============================================================
-# CoCoSo App (unchanged)
-# ============================================================
+# CoCoSo App 
+==========================
 def cocoso_app():
     st.header("📊 IT2TrFS-CoCoSo")
     st.caption("Normalization uses δ⁺ (max) for Benefit and δ⁻ (min) for Cost")
@@ -1150,18 +1185,23 @@ def wings_app():
 # ============================================================
 def main():
     st.sidebar.title("🧠 IT2TrFS MCDM Suite")
-    page = st.sidebar.radio("Navigate", ["IT2TrFS-Delphi", "IT2TrFS-WINGS", "IT2TrFS-CoCoSo"])
+    st.sidebar.caption("Decision analytics workspace")
+
+    page = st.sidebar.radio(
+        "Navigate",
+        ["IT2TrFS-Delphi", "IT2TrFS-WINGS", "IT2TrFS-CoCoSo"],
+    )
+
     st.sidebar.markdown("---")
     st.sidebar.success("✅ Authenticated")
+
     if st.sidebar.button("🚪 Logout", use_container_width=True, type="secondary"):
         logout()
         st.rerun()
 
-    # Render researcher profiles in sidebar (below logout)
-    st.sidebar.markdown("---")
-    render_sidebar_profiles()
+    # Move researcher profiles permanently into the sidebar
+    render_inventor_profiles_sidebar()
 
-    # Main content area
     if page == "IT2TrFS-Delphi":
         delphi_app()
     elif page == "IT2TrFS-WINGS":
