@@ -9,10 +9,10 @@ import pandas as pd
 import streamlit as st
 
 # =========================================================
-# PAGE CONFIG — MUST BE THE FIRST STREAMLIT COMMAND
+# PAGE CONFIG
 # =========================================================
 st.set_page_config(
-    page_title="IVFFS Delphi · WINGS · TODIM Toolkit",
+    page_title=" An Intelligent IVFFS-Delphi-WINGS-TODIM Toolkit",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -374,10 +374,10 @@ def check_password():
             """
             <div class="login-page">
                 <div class="login-hero-box">
-                    <h1>IVFFS Decision Analytics Toolkit</h1>
+                    <h1>An Intelligent IVFFS Decision Analytics Toolkit</h1>
                     <p>
                         Secure access to the integrated IVFFS-Delphi, IVFFS-WINGS,
-                        and IVFFS-TODIM research workspace.
+                        and IVFFS-TODIM decision analytics platform.
                     </p>
                 </div>
                 <div class="login-form-note">
@@ -438,10 +438,10 @@ def render_workspace_banner():
     st.markdown(
         """
         <div class="suite-hero">
-            <div class="suite-hero-title">🧠 Integrated IVFFS Delphi · WINGS · TODIM Toolkit</div>
+            <div class="suite-hero-title">🧠 An Intelligent Integrated Dombi t-norm and t-conorm IVFFS Delphi-WINGS-TODIM MCDM Toolkit</div>
             <div class="suite-hero-subtitle">
-                A unified research interface for screening criteria, mapping causal structure,
-                and ranking alternatives using interval-valued Fermatean fuzzy sets.
+                An intelligent decision analytic platform for criteria screening, causal structure  mapping,
+                and alternatives ranking using Dombi t-norm and t-conorm IVFFS Delphi-WINGS-TODIM Model.
             </div>
             <div class="suite-badge-row">
                 <span class="suite-badge">Secure Access</span>
@@ -461,7 +461,7 @@ def render_workspace_banner():
             <div class="suite-native-card">
                 <div class="suite-native-title">📘 IVFFS-Delphi</div>
                 <div class="suite-native-text">
-                    Screen and validate candidate criteria through linguistic Delphi responses,
+                    Screen and validate candidate criteria through IVFFS linguistic Delphi responses,
                     IVFFDWA aggregation, and threshold-based selection.
                 </div>
             </div>
@@ -487,7 +487,7 @@ def render_workspace_banner():
             <div class="suite-native-card">
                 <div class="suite-native-title">📊 IVFFS-TODIM</div>
                 <div class="suite-native-text">
-                    Evaluate alternatives with expert linguistic judgments, normalization,
+                    Evaluate alternatives with expert IVFFS linguistic judgments, normalization,
                     dominance comparison, and final superiority ranking.
                 </div>
             </div>
@@ -562,10 +562,6 @@ def render_sidebar_research_profiles():
                 "Research interests include sustainable supply chains, logistics, risk "
                 "management, Industry 4.0, and circular economy."
             ),
-            extras=[
-                "Affiliation: University of Dhaka",
-                "Program: PolyU Presidential PhD Fellow",
-            ],
             full_bio=(
                 "Md. Abdul Moktadir is pursuing a PhD in Industrial and Systems Engineering "
                 "at The Hong Kong Polytechnic University and serves as an Assistant Professor "
