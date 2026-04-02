@@ -12,7 +12,7 @@ import hmac
 from pathlib import Path
 
 # ============================================================
-# PAGE CONFIG (must be first Streamlit command)
+# PAGE CONFIG
 # ============================================================
 st.set_page_config(
     page_title="IT2TrFS MCDM Toolkit | Delphi · WINGS · CoCoSo",
@@ -22,7 +22,7 @@ st.set_page_config(
 )
 
 # ============================================================
-# PROFESSIONAL CSS STYLING
+# CSS STYLING
 # ============================================================
 st.markdown("""
 <style>
@@ -323,7 +323,39 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
     }
-
+    /* ===== Colorful page title box ===== */
+    .page-banner {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 55%, #ec4899 100%);
+        border-radius: 20px;
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1.15rem;
+        box-shadow: 0 12px 30px rgba(59, 130, 246, 0.18);
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+    .page-banner-title {
+        color: white;
+        font-size: 1.65rem;
+        font-weight: 800;
+        margin: 0 0 0.3rem 0;
+        letter-spacing: -0.02em;
+    }
+    .page-banner-subtitle {
+        color: rgba(255,255,255,0.92);
+        font-size: 0.96rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    /* Optional alternate banner themes */
+    .page-banner.green {
+        background: linear-gradient(135deg, #059669 0%, #0ea5e9 55%, #2563eb 100%);
+    }
+    .page-banner.orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 55%, #ec4899 100%);
+    }
+    .page-banner.slate {
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -482,7 +514,6 @@ def render_sidebar_research_profiles():
             ),
         )
 
-
 def render_footer():
     st.markdown(
         """
@@ -492,10 +523,31 @@ def render_footer():
         """,
         unsafe_allow_html=True,
     )
+def render_page_banner(title, subtitle, theme="default"):
+    theme_class = "" if theme == "default" else f" {theme}"
+    st.markdown(
+        f"""
+        <div class="page-banner{theme_class}">
+            <div class="page-banner-title">{title}</div>
+            <div class="page-banner-subtitle">{subtitle}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
+
+def dataframe_dict_to_excel_bytes(sheet_map):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        for sheet_name, df in sheet_map.items():
+            safe_name = re.sub(r'[\\/*?:\\[\\]]', "", str(sheet_name))[:31] or "Sheet1"
+            export_df = df.copy()
+            export_df.to_excel(writer, index=False, sheet_name=safe_name)
+    output.seek(0)
+    return output.getvalue()
 
 # ============================================================
-# IT2TrFS REPRESENTATION (unchanged from original)
+# IT2TrFS REPRESENTATION
 # ============================================================
 def format_it2(it2):
     u, l = it2
@@ -580,7 +632,7 @@ def it2_score_components(it2):
     return score_u, score_l, crisp
 
 # ============================================================
-# IT2TrFS-CoCoSo linguistic scale & helpers (unchanged)
+# IT2TrFS-CoCoSo linguistic scale & helpers
 # ============================================================
 COCOSO_LINGUISTIC_TERMS = {
     "VP": ((0, 0, 0, 0.1, 1, 1), (0.05, 0, 0, 0.05, 0.9, 0.9)),
@@ -654,7 +706,7 @@ def format_it2_table(matrix_dict, alternatives, criteria, value_formatter=format
     return df
 
 # ============================================================
-# Delphi functions (unchanged)
+# Delphi functions
 # ============================================================
 DELPHI_NUMERIC_SCALE = {
     1: ((0, 0.1, 0.1, 0.1, 1, 1), (0.0, 0.1, 0.1, 0.05, 0.9, 0.9)),
@@ -799,8 +851,11 @@ def render_delphi_results(clean_scores_df, summary_df, threshold):
     return out, accepted
 
 def delphi_app():
-    st.title("📘 IT2TrFS-Delphi Screening Module")
-    st.write("Standalone IT2TrFS-Delphi module. No expert-weight input is used in this page.")
+    render_page_banner(
+    "📘 IT2TrFS-Delphi Screening Module",
+    "Standalone IT2TrFS-Delphi module. No expert-weight input is used in this page.",
+    theme="default"
+    )
     tab_howto, tab_excel, tab_manual = st.tabs(["📘 How to Use", "📂 Excel Upload", "✍️ Manual Entry"])
     with tab_howto:
         st.markdown("**What this page does**\n- Converts Delphi scores (1–5) into IT2TrFS values.\n- Aggregates responses criterion-wise using equal contribution from all valid respondents.\n- Computes Score(UMF), Score(LMF), and the final crisp score.\n- Screens criteria using a user-defined acceptance threshold.")
@@ -866,11 +921,14 @@ def delphi_app():
             render_delphi_results(clean_scores, summary_df, threshold_manual)
 
 # ============================================================
-# CoCoSo App (unchanged)
+# CoCoSo App
 # ============================================================
 def cocoso_app():
-    st.header("📊 IT2TrFS-CoCoSo")
-    st.caption("Normalization uses δ⁺ (max) for Benefit and δ⁻ (min) for Cost")
+    render_page_banner(
+    "📊 IT2TrFS-CoCoSo",
+    "Normalization uses δ⁺ (max) for Benefit and δ⁻ (min) for Cost.",
+    theme="green"
+    )
     with st.expander("Linguistic scale (VP…VG)"):
         scale_df = pd.DataFrame([{"Abbr": k, "Meaning": COCOSO_FULL[k], "IT2TrFS": format_it2(v)} for k, v in COCOSO_LINGUISTIC_TERMS.items()])
         st.dataframe(scale_df, hide_index=True, use_container_width=True)
@@ -976,9 +1034,34 @@ def cocoso_app():
             dfK = dfK.sort_values("Rank").reset_index(drop=True)
             st.markdown("#### 3.5 Final CoCoSo indices & Rank")
             st.dataframe(dfK.style.format(precision=6), use_container_width=True, hide_index=True)
+                        # -------------------------
+            # Excel export for CoCoSo
+            # -------------------------
+            agg_export = format_it2_table(agg_matrix, alternatives, criteria).reset_index().rename(columns={"index": "Alternative"})
+            norm_export = format_it2_table(norm_matrix, alternatives, criteria).reset_index().rename(columns={"index": "Alternative"})
 
+            crisp_export = df_crisp.copy()
+            final_export = dfK.copy()
+
+            excel_bytes = dataframe_dict_to_excel_bytes({
+                "Aggregated Matrix": agg_export,
+                "Normalized Matrix": norm_export,
+                "SBi": sbi_df,
+                "PBi": pbi_df,
+                "Crisp Scores": crisp_export,
+                "Final Ranking": final_export,
+            })
+
+            st.download_button(
+                "⬇️ Download CoCoSo Results (Excel)",
+                data=excel_bytes,
+                file_name="it2trfs_cocoso_results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                key="cocoso_excel_download"
+            )
 # ============================================================
-# WINGS functions (unchanged)
+# WINGS functions
 # ============================================================
 LINGUISTIC_TERMS = {
     "strength": {"VLR": ((0, 0.1, 0.1, 0.1, 1, 1), (0.0, 0.1, 0.1, 0.05, 0.9, 0.9)),
@@ -1152,8 +1235,11 @@ def get_word_download_link(doc):
     return href
 
 def wings_app():
-    st.title("📊 IT2TrFS WINGS Method Analysis Platform")
-    st.write("IT2TrFS-WINGS module")
+   render_page_banner(
+    "📊 IT2TrFS WINGS Method Analysis Platform",
+    "IT2TrFS-WINGS module for causal analysis, interaction mapping, and weight derivation.",
+    theme="orange"
+    )    
     tab_howto, tab_analysis = st.tabs(["📘 How to Use", "📊 Analysis"])
     with tab_howto:
         st.markdown("Use the sidebar to configure components/experts and run IT2TrFS-WINGS.")
