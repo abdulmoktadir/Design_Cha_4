@@ -982,10 +982,35 @@ def _to_float(x, default=0.0) -> float:
         return default
 
 
+def _sanitize_name_sequence(names, prefix="Item") -> List[str]:
+    if names is None:
+        raw_names = []
+    else:
+        try:
+            raw_names = list(names)
+        except TypeError:
+            raw_names = [names]
+
+    cleaned: List[str] = []
+    seen: Dict[str, int] = {}
+    for idx, raw_name in enumerate(raw_names, 1):
+        base = str(raw_name).strip()
+        if not base or base.lower() in {"nan", "none"}:
+            base = f"{prefix} {idx}"
+        count = seen.get(base, 0) + 1
+        seen[base] = count
+        cleaned.append(base if count == 1 else f"{base} ({count})")
+    return cleaned
+
+
 def make_square_df(names, fill=0.0):
-    df = pd.DataFrame(fill, index=names, columns=names)
-    np.fill_diagonal(df.values, 0.0)
-    return df
+    safe_names = _sanitize_name_sequence(names, prefix="Strategy")
+    n = len(safe_names)
+    if n == 0:
+        return pd.DataFrame(dtype=float)
+    arr = np.full((n, n), float(_to_float(fill, 0.0)), dtype=float)
+    np.fill_diagonal(arr, 0.0)
+    return pd.DataFrame(arr, index=safe_names, columns=safe_names)
 
 
 def upper_triangle_only(mat: np.ndarray) -> np.ndarray:
@@ -1176,6 +1201,7 @@ def _df_to_qfd_paste_blocks(df: pd.DataFrame, name_col: str = "Challenge") -> Tu
 
 
 def _milp_default_expert_payload(strategy_names: List[str]) -> Dict[str, pd.DataFrame]:
+    strategy_names = _sanitize_name_sequence(strategy_names, prefix="Strategy")
     return {
         "IC_avg": pd.DataFrame({"Strategy": strategy_names, "Avg": 0.0}),
         "IT_avg": pd.DataFrame({"Strategy": strategy_names, "Avg": 0.0}),
@@ -1185,6 +1211,7 @@ def _milp_default_expert_payload(strategy_names: List[str]) -> Dict[str, pd.Data
 
 
 def _milp_normalize_vector_df(df: Optional[pd.DataFrame], strategy_names: List[str]) -> pd.DataFrame:
+    strategy_names = _sanitize_name_sequence(strategy_names, prefix="Strategy")
     if not isinstance(df, pd.DataFrame) or df.empty:
         return pd.DataFrame({"Strategy": strategy_names, "Avg": 0.0})
 
@@ -1208,6 +1235,7 @@ def _milp_normalize_vector_df(df: Optional[pd.DataFrame], strategy_names: List[s
 
 
 def _milp_normalize_square_df(df: Optional[pd.DataFrame], strategy_names: List[str]) -> pd.DataFrame:
+    strategy_names = _sanitize_name_sequence(strategy_names, prefix="Strategy")
     if not isinstance(df, pd.DataFrame):
         return make_square_df(strategy_names, 0.0)
 
@@ -1221,6 +1249,7 @@ def _milp_normalize_square_df(df: Optional[pd.DataFrame], strategy_names: List[s
 
 
 def _ensure_milp_avg_expert_store(strategy_names: List[str], n_exp: int) -> None:
+    strategy_names = _sanitize_name_sequence(strategy_names, prefix="Strategy")
     store = st.session_state.get("milp_avg_experts")
     if not isinstance(store, dict):
         store = {}
@@ -1251,6 +1280,7 @@ def _ensure_milp_avg_expert_store(strategy_names: List[str], n_exp: int) -> None
 
 
 def make_rij_editor_df(strategy_names: List[str], rij_values) -> pd.DataFrame:
+    strategy_names = _sanitize_name_sequence(strategy_names, prefix="Strategy")
     arr = np.asarray(rij_values, dtype=float).reshape(-1)
     n = len(strategy_names)
     if len(arr) != n:
@@ -2707,12 +2737,17 @@ def page_trfs_qfd():
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("**Challenge Names**")
-        ch_names = [st.text_input(f"Challenge {i+1}", value=f"Ch{i+1}", key=f"ch_name_{i}",
-                                  label_visibility="collapsed") for i in range(n_ch)]
+        ch_names_raw = [st.text_input(f"Challenge {i+1}", value=f"Ch{i+1}", key=f"ch_name_{i}",
+                                      label_visibility="collapsed") for i in range(n_ch)]
     with col2:
         st.markdown("**Strategy Names**")
-        sy_names = [st.text_input(f"Strategy {j+1}", value=f"Sy{j+1}", key=f"sy_name_{j}",
-                                  label_visibility="collapsed") for j in range(n_sy)]
+        sy_names_raw = [st.text_input(f"Strategy {j+1}", value=f"Sy{j+1}", key=f"sy_name_{j}",
+                                      label_visibility="collapsed") for j in range(n_sy)]
+
+    ch_names = _sanitize_name_sequence(ch_names_raw, prefix="Challenge")
+    sy_names = _sanitize_name_sequence(sy_names_raw, prefix="Strategy")
+    if ch_names != [str(x).strip() for x in ch_names_raw] or sy_names != [str(x).strip() for x in sy_names_raw]:
+        st.info("Blank or duplicate challenge/strategy names were auto-corrected for internal calculations so the tables remain valid.")
 
     wkey = f"wdf|{n_ch}|" + "|".join(ch_names)
     if st.session_state.get("wkey") != wkey:
@@ -3161,8 +3196,12 @@ def page_milp():
         st.info("ℹ️ Please run the TrFS-QFD analysis first to compute strategy importance scores.")
         return
 
-    sy_names = st.session_state["sy_names"]
+    sy_names = _sanitize_name_sequence(st.session_state.get("sy_names", []), prefix="Strategy")
+    st.session_state["sy_names"] = sy_names
     m = len(sy_names)
+    if m == 0:
+        st.warning("No valid strategy names are available for the MILP model. Run Module 4 again and ensure each strategy has a name.")
+        return
 
     with st.sidebar:
         st.markdown('<div class="section-header">⚙️ Optimization Settings</div>', unsafe_allow_html=True)
