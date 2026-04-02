@@ -1,14 +1,28 @@
+import base64
 import csv
+import hmac
 import io
 import zipfile
 from dataclasses import dataclass
+from html import escape
+from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
+import graphviz
 import numpy as np
 import pandas as pd
 import streamlit as st
-import graphviz
 from streamlit_extras.metric_cards import style_metric_cards
+
+# ============================================================
+# Page config
+# ============================================================
+st.set_page_config(
+    page_title="Protected Stratification → TrFS-BWM → Global Weights → TrFS-QFD → MILP DSS",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 # SciPy is required for TrFS-BWM LP models
 try:
@@ -20,77 +34,933 @@ except Exception:
 
 
 # ============================================================
-# Styling
+# Styling, authentication, sidebar profiles, and footer
 # ============================================================
 
+CSS = """
+<style>
+:root {
+    --bg: #f4f7fb;
+    --surface: rgba(255, 255, 255, 0.92);
+    --surface-strong: #ffffff;
+    --border: #d9e4f2;
+    --text: #10233d;
+    --muted: #60748c;
+    --primary: #1f5eff;
+    --primary-strong: #113a9f;
+    --accent: #0f766e;
+    --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    --shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.05);
+    --radius: 18px;
+}
+
+html, body, [class*="css"] {
+    font-family: "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+.stApp {
+    background:
+        radial-gradient(circle at top left, rgba(79, 124, 255, 0.11), transparent 28%),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 24%),
+        linear-gradient(180deg, #f8fbff 0%, #eef3f9 100%);
+    color: var(--text);
+}
+
+.block-container {
+    padding-top: 1.25rem;
+    padding-bottom: 2.5rem;
+    max-width: 1480px;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0f172a 0%, #13233d 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-testid="stSidebar"] * {
+    color: #e6edf7;
+}
+
+[data-testid="stSidebar"] [data-baseweb="radio"] label {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.45rem;
+}
+
+[data-testid="stSidebar"] [data-baseweb="radio"] label:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.main-header {
+    padding: 0.7rem 0 0.65rem 0;
+    border-bottom: 2px solid rgba(31, 94, 255, 0.18);
+    margin-bottom: 1.6rem;
+    color: var(--text);
+    letter-spacing: -0.03em;
+}
+
+.section-header {
+    background: linear-gradient(90deg, rgba(240,247,255,0.95) 0%, rgba(231,241,255,0.95) 100%);
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    border-left: 4px solid var(--primary);
+    margin: 1.35rem 0 1rem 0;
+    color: var(--primary-strong);
+    font-weight: 800;
+    box-shadow: var(--shadow-soft);
+}
+
+.info-box {
+    background-color: rgba(255, 255, 255, 0.84);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+    margin: 1rem 0;
+    box-shadow: var(--shadow-soft);
+}
+
+.highlight {
+    background: linear-gradient(90deg, #fff6d8 0%, #fff9e8 100%);
+    padding: 0.7rem 0.85rem;
+    border-radius: 12px;
+    border-left: 4px solid #f59e0b;
+}
+
+.hero-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(245,249,255,0.95) 48%, rgba(238,245,255,0.98) 100%);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 1.55rem 1.7rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.15rem;
+}
+
+.hero-eyebrow,
+.info-label,
+.kpi-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--primary-strong);
+}
+
+.hero-title {
+    margin-top: 0.15rem;
+    font-size: 2.15rem;
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--text);
+}
+
+.hero-subtitle {
+    margin-top: 0.55rem;
+    max-width: 920px;
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-top: 1.15rem;
+}
+
+.info-card,
+.kpi-card,
+.app-card {
+    background: var(--surface-strong);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+}
+
+.info-card {
+    padding: 0.95rem 1rem;
+}
+
+.info-card strong {
+    display: block;
+    margin: 0.3rem 0 0.15rem;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.info-card small {
+    display: block;
+    line-height: 1.55;
+    color: var(--muted);
+}
+
+.stButton > button {
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    padding: 0.72rem 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: white;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+    box-shadow: 0 10px 24px rgba(31, 94, 255, 0.24);
+    transition: all 0.2s ease;
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(31, 94, 255, 0.28);
+}
+
+button[data-baseweb="tab"] {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.88);
+    height: 42px;
+    padding: 0 1rem;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    background: linear-gradient(135deg, rgba(31, 94, 255, 0.12), rgba(17, 58, 159, 0.18));
+    border-color: rgba(31, 94, 255, 0.3);
+    color: var(--primary-strong);
+    font-weight: 700;
+}
+
+[data-baseweb="tab-list"] {
+    gap: 0.55rem;
+    padding-bottom: 0.45rem;
+}
+
+[data-testid="metric-container"] {
+    background: rgba(255,255,255,0.9);
+    padding: 1rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-soft);
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 1.8rem;
+    color: var(--text);
+}
+
+div[data-testid="stDataFrame"],
+div[data-testid="stTable"] {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.92);
+    box-shadow: var(--shadow-soft);
+}
+
+div[data-testid="stExpander"] {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.78);
+    box-shadow: var(--shadow-soft);
+}
+
+textarea,
+div[data-baseweb="input"] > div,
+div[data-baseweb="select"] > div,
+.stNumberInput input {
+    border-radius: 12px !important;
+}
+
+.sidebar-section-title {
+    color: #f8fbff !important;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    margin: 0.35rem 0 0.75rem 0;
+}
+
+.sidebar-section-note {
+    color: #aac0db !important;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: 0 0 0.85rem 0;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] > details {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] summary {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+}
+
+[data-testid="stSidebar"] div[data-testid="stExpander"] summary p,
+[data-testid="stSidebar"] div[data-testid="stExpander"] summary svg {
+    color: #f8fbff !important;
+    fill: #f8fbff !important;
+    font-weight: 700 !important;
+}
+
+.sidebar-profile-card {
+    background: linear-gradient(180deg, rgba(19, 36, 67, 0.98) 0%, rgba(14, 28, 53, 0.98) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 18px;
+    padding: 1rem;
+    margin: 0.1rem 0 0.9rem 0;
+    box-shadow: 0 14px 28px rgba(2, 8, 23, 0.28);
+}
+
+.sidebar-profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #dbeafe !important;
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(147, 197, 253, 0.22);
+    border-radius: 999px;
+    padding: 0.26rem 0.58rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+}
+
+.sidebar-profile-image-frame {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    margin-bottom: 0.85rem;
+}
+
+.sidebar-profile-image {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.sidebar-profile-image-placeholder {
+    padding: 1.1rem 0.85rem;
+    text-align: center;
+    color: #dbe7f5 !important;
+    font-size: 0.78rem;
+}
+
+.sidebar-profile-name {
+    color: #ffffff !important;
+    font-size: 1.08rem;
+    font-weight: 800;
+    margin: 0 0 0.18rem 0;
+    line-height: 1.35;
+}
+
+.sidebar-profile-role {
+    color: #c7ddff !important;
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1.45;
+    margin-bottom: 0.16rem;
+}
+
+.sidebar-profile-institution {
+    color: #e5eefb !important;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin-bottom: 0.62rem;
+}
+
+.sidebar-profile-text,
+.sidebar-profile-bullet,
+.sidebar-profile-bio {
+    color: #d9e5f5 !important;
+    font-size: 0.8rem;
+    line-height: 1.65;
+}
+
+.sidebar-profile-text {
+    margin-bottom: 0.55rem;
+}
+
+.sidebar-profile-bullet {
+    margin-bottom: 0.22rem;
+}
+
+.sidebar-profile-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 0.72rem 0 0.68rem 0;
+}
+
+.login-page {
+    position: relative;
+    max-width: 920px;
+    margin: 1.9rem auto 0 auto;
+    padding: 0 0.9rem 1.25rem 0.9rem;
+}
+
+.login-page::before,
+.login-page::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(12px);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.login-page::before {
+    top: 34px;
+    left: -36px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0.02) 72%);
+}
+
+.login-page::after {
+    bottom: 8px;
+    right: -20px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.16) 0%, rgba(20, 184, 166, 0.02) 72%);
+}
+
+.login-hero-box {
+    position: relative;
+    z-index: 1;
+    background:
+        radial-gradient(circle at 86% 18%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.02) 26%),
+        radial-gradient(circle at 16% 110%, rgba(45, 212, 191, 0.18) 0%, rgba(45, 212, 191, 0.02) 28%),
+        linear-gradient(135deg, #081225 0%, #153ea8 45%, #0ea5e9 100%);
+    border-radius: 34px;
+    padding: 1.3rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16), 0 10px 30px rgba(37, 99, 235, 0.16);
+    border: 1px solid rgba(255,255,255,0.18);
+    overflow: hidden;
+}
+
+.login-hero-box::before,
+.login-hero-box::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.login-hero-box::before {
+    top: -68px;
+    right: -52px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 72%);
+}
+
+.login-hero-box::after {
+    bottom: -90px;
+    left: -54px;
+    width: 230px;
+    height: 230px;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.18) 0%, rgba(129, 140, 248, 0.02) 72%);
+}
+
+.login-hero-inner {
+    position: relative;
+    z-index: 1;
+    min-height: 310px;
+    border-radius: 26px;
+    padding: 2.2rem 2.15rem 2rem 2.15rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    backdrop-filter: blur(10px);
+}
+
+.login-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.96);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.login-hero-box h1 {
+    color: #ffffff !important;
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    line-height: 1.02;
+    margin: 1rem 0 0.95rem 0;
+    letter-spacing: -0.055em;
+    max-width: 760px;
+}
+
+.login-hero-box p {
+    color: rgba(255,255,255,0.93) !important;
+    margin: 0;
+    max-width: 700px;
+    font-size: 1.1rem;
+    line-height: 1.72;
+}
+
+.login-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.15rem;
+}
+
+.login-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.48rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #eff6ff;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(10px);
+}
+
+.login-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-top: 1.35rem;
+}
+
+.login-metric-card {
+    padding: 0.92rem 0.95rem;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.login-metric-label {
+    display: block;
+    color: rgba(255,255,255,0.72);
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.login-metric-value {
+    display: block;
+    margin-top: 0.35rem;
+    color: #ffffff;
+    font-size: 1.08rem;
+    font-weight: 800;
+}
+
+.login-metric-note {
+    display: block;
+    margin-top: 0.25rem;
+    color: rgba(255,255,255,0.74);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.login-form-note {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: #475569;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+div[data-testid="stForm"] {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,251,255,0.98) 100%);
+    border: 1px solid rgba(219,228,240,0.92);
+    border-radius: 28px;
+    padding: 1.6rem 1.6rem 1.2rem 1.6rem;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08), 0 12px 26px rgba(31, 94, 255, 0.08);
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+div[data-testid="stForm"] label p {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+div[data-testid="stForm"] .stTextInput input {
+    min-height: 60px;
+    font-size: 1rem;
+    border-radius: 16px;
+    padding: 0.92rem 1rem;
+    border: 1px solid #d8e2ef;
+    background: rgba(248,250,252,0.95);
+}
+
+div[data-testid="stForm"] .stButton > button,
+div[data-testid="stForm"] .stFormSubmitButton > button {
+    min-height: 56px;
+    border-radius: 16px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.login-helper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.login-helper span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.42rem 0.8rem;
+    background: rgba(255,255,255,0.72);
+    color: #64748b;
+    font-size: 0.8rem;
+    border: 1px solid rgba(219,228,240,0.92);
+}
+
+.app-footer {
+    text-align: center;
+    margin-top: 2.6rem;
+    padding: 1rem 0 0.25rem 0;
+    color: #64748b;
+    font-size: 0.78rem;
+    border-top: 1px solid rgba(16, 35, 61, 0.08);
+}
+
+.copyright-pill {
+    display: inline-block;
+    margin-bottom: 0.55rem;
+    padding: 0.38rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #dbe4f0;
+    background: #ffffff;
+    color: #0f172a;
+    font-weight: 700;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+}
+
+@media (max-width: 1200px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .login-page {
+        max-width: 100%;
+        margin-top: 1.15rem;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .login-hero-box {
+        border-radius: 26px;
+        padding: 0.8rem;
+    }
+
+    .login-hero-inner {
+        min-height: auto;
+        padding: 1.45rem 1.1rem 1.3rem 1.1rem;
+        border-radius: 22px;
+    }
+
+    .login-hero-box h1 {
+        font-size: 2.2rem;
+        line-height: 1.08;
+    }
+
+    .login-hero-box p {
+        font-size: 0.98rem;
+    }
+
+    .login-metrics {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+"""
+
 def apply_custom_styling():
-    st.markdown("""
-    <style>
-    .main-header {
-        padding: 1rem 0 0.5rem 0;
-        border-bottom: 2px solid #4f8bf9;
-        margin-bottom: 2rem;
-        color: #1e3a8a;
-    }
-    .section-header {
-        background: linear-gradient(90deg, #f0f7ff 0%, #e6f0ff 100%);
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        border-left: 4px solid #4f8bf9;
-        margin: 1.5rem 0 1rem 0;
-        color: #1e3a8a;
-        font-weight: 600;
-    }
-    .info-box {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
-    }
-    .highlight {
-        background-color: #fff3cd;
-        padding: 0.5rem;
-        border-radius: 4px;
-        border-left: 4px solid #ffc107;
-    }
-    .dataframe {
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-    }
-    .stButton>button {
-        width: 100%;
-        border-radius: 6px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(79, 139, 249, 0.2);
-    }
-    [data-testid="metric-container"] {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-    }
-    [data-testid="stMetricValue"] {
-        font-size: 1.8rem;
-        color: #0e1117;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        border-radius: 4px;
-        padding: 10px 20px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    st.markdown(CSS, unsafe_allow_html=True)
+
+
+def logout():
+    st.session_state.authenticated = False
+    st.rerun()
+
+
+def check_password():
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if st.session_state.authenticated:
+        return True
+
+    expected_password = st.secrets.get("APP_PASSWORD", None)
+
+    left, center, right = st.columns([0.25, 4.4, 0.25])
+    with center:
+        st.markdown(
+            """
+            <div class="login-page">
+                <div class="login-hero-box">
+                    <div class="login-hero-inner">
+                        <div class="login-badge">Secure research workspace</div>
+                        <h1>Protected System-Level TrFS Decision Support Studio</h1>
+                        <p>
+                            Access the integrated workspace for stratification, scenario-aware TrFS-BWM,
+                            global weight synthesis, TrFS-QFD prioritization, and MILP strategy optimization
+                            in one premium environment.
+                        </p>
+                        <div class="login-pill-row">
+                            <span class="login-pill">Stratification</span>
+                            <span class="login-pill">TrFS-BWM</span>
+                            <span class="login-pill">Global Weights</span>
+                            <span class="login-pill">TrFS-QFD</span>
+                            <span class="login-pill">MILP Optimization</span>
+                        </div>
+                        <div class="login-metrics">
+                            <div class="login-metric-card">
+                                <span class="login-metric-label">Modules</span>
+                                <span class="login-metric-value">5 linked analytics modules</span>
+                                <span class="login-metric-note">From scenario logic to portfolio selection.</span>
+                            </div>
+                            <div class="login-metric-card">
+                                <span class="login-metric-label">Access</span>
+                                <span class="login-metric-value">Password protected</span>
+                                <span class="login-metric-note">Controlled sign-in for protected research work.</span>
+                            </div>
+                            <div class="login-metric-card">
+                                <span class="login-metric-label">Outputs</span>
+                                <span class="login-metric-value">Decision-ready results</span>
+                                <span class="login-metric-note">Weights, rankings, exports, and optimization insights.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="login-form-note">
+                    Sign in with the application password to continue
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if expected_password is None:
+            st.error(
+                "APP_PASSWORD is not configured. Add it in .streamlit/secrets.toml "
+                "or Streamlit Cloud Settings → Secrets."
+            )
+            return False
+
+        with st.form("login_form", clear_on_submit=False):
+            password = st.text_input(
+                "Password",
+                type="password",
+                placeholder="Enter application password",
+            )
+            submitted = st.form_submit_button("Log in", use_container_width=True)
+
+        st.markdown(
+            '<div class="login-helper"><span>🔒 Protected workspace · Researcher profile and copyright footer enabled after sign-in</span></div>',
+            unsafe_allow_html=True,
+        )
+
+        if submitted:
+            if hmac.compare_digest(password, str(expected_password)):
+                st.session_state.authenticated = True
+                st.success("Access granted.")
+                st.rerun()
+            else:
+                st.error("Incorrect password.")
+
+    return False
+
+
+def get_asset_path(filename: str) -> Path:
+    return Path(__file__).parent / "assets" / filename
+
+
+def get_image_data_uri(image_path: Path) -> str | None:
+    image_path = Path(image_path)
+    if not image_path.exists():
+        return None
+
+    suffix = image_path.suffix.lower()
+    mime = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }.get(suffix, "image/png")
+    encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+    return f"data:{mime};base64,{encoded}"
+
+
+def render_sidebar_profile_card(container, name, role, institution, image_path, brief_text, full_bio=None, extras=None, tag="Researcher"):
+    safe_name = escape(name)
+    safe_role = escape(role)
+    safe_institution = escape(institution)
+    safe_brief = escape(brief_text)
+    safe_tag = escape(tag)
+    image_uri = get_image_data_uri(Path(image_path))
+
+    if image_uri:
+        image_html = f'<img class="sidebar-profile-image" src="{image_uri}" alt="{safe_name}">'
+    else:
+        image_html = '<div class="sidebar-profile-image-placeholder">Profile image not available</div>'
+
+    extras_html = ""
+    if extras:
+        extras_html = '<div class="sidebar-profile-divider"></div>' + "".join(
+            f'<div class="sidebar-profile-bullet">• {escape(item)}</div>' for item in extras
+        )
+
+    container.markdown(
+        f"""
+        <div class="sidebar-profile-card">
+            <div class="sidebar-profile-badge">👤 {safe_tag}</div>
+            <div class="sidebar-profile-image-frame">{image_html}</div>
+            <div class="sidebar-profile-name">{safe_name}</div>
+            <div class="sidebar-profile-role">{safe_role}</div>
+            <div class="sidebar-profile-institution">{safe_institution}</div>
+            <div class="sidebar-profile-text">{safe_brief}</div>
+            {extras_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if full_bio:
+        with container.expander(f"More about {name}", expanded=False):
+            st.markdown(
+                f'<div class="sidebar-profile-bio">{escape(full_bio)}</div>',
+                unsafe_allow_html=True,
+            )
+
+
+def render_sidebar_research_profiles():
+    sidebar_box = st.sidebar.container()
+    sidebar_box.markdown("---")
+    sidebar_box.markdown(
+        '<div class="sidebar-section-title">Researcher Profiles</div>',
+        unsafe_allow_html=True,
+    )
+    sidebar_box.markdown(
+        '<div class="sidebar-section-note">Profiles stay fixed in the left panel with improved contrast for readability.</div>',
+        unsafe_allow_html=True,
+    )
+
+    render_sidebar_profile_card(
+        sidebar_box,
+        name="Prof. J.Z. Ren 任競爭",
+        role="Associate Professor",
+        institution="The Hong Kong Polytechnic University",
+        image_path=get_asset_path("prof_jz_ren.png"),
+        brief_text=(
+            "Process systems engineering for energy, environment, and sustainability; "
+            "recipient of the 2022 APEC ASPIRE Prize."
+        ),
+        full_bio=(
+            "Dr. Jingzheng Ren is an Associate Professor at The Hong Kong Polytechnic "
+            "University. His research focuses on process systems engineering for energy, "
+            "environment and sustainability, including innovative industrial processes, "
+            "decision tools, and optimization models for carbon-neutral industrial systems."
+        ),
+        tag="Lead Researcher",
+    )
+
+    render_sidebar_profile_card(
+        sidebar_box,
+        name="Md. Abdul Moktadir",
+        role="Assistant Professor (Leather Products Engineering)",
+        institution="University of Dhaka / PolyU Presidential PhD Fellow",
+        image_path=get_asset_path("abdul_moktadir.png"),
+        brief_text=(
+            "Research interests include sustainable supply chains, logistics, risk "
+            "management, Industry 4.0, and circular economy."
+        ),
+        extras=[
+            "Affiliation: University of Dhaka",
+            "Program: PolyU Presidential PhD Fellow",
+        ],
+        full_bio=(
+            "Md. Abdul Moktadir is pursuing a PhD in Industrial and Systems Engineering "
+            "at The Hong Kong Polytechnic University and serves as an Assistant Professor "
+            "of Leather Products Engineering at the University of Dhaka."
+        ),
+        tag="Co-Researcher",
+    )
+
+
+def render_app_header():
+    st.markdown(
+        """
+        <div class="hero-card">
+            <div class="hero-eyebrow">Protected decision analytics workspace</div>
+            <div class="hero-title">System-Level TrFS-SBWM-QFD-MILP Decision Support Model</div>
+            <div class="hero-subtitle">
+                Integrated advanced fuzzy decision-support toolkit for scenario stratification, TrFS weighting,
+                global sub-criteria synthesis, QFD prioritization, and portfolio optimization.
+            </div>
+            <div class="hero-grid">
+                <div class="info-card">
+                    <span class="info-label">Workflow</span>
+                    <strong>5 connected modules</strong>
+                    <small>Stratification → TrFS-BWM → Global Weights → TrFS-QFD → MILP Optimization</small>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Purpose</span>
+                    <strong>Research-grade decision support</strong>
+                    <small>Move from expert judgment and scenario logic to ranked strategies and optimized portfolios.</small>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Output</span>
+                    <strong>Clear, exportable analytics</strong>
+                    <small>Generate weighted models, relationship matrices, crisp scores, and optimization-ready results.</small>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_footer():
+    st.markdown(
+        """
+        <div class="app-footer">
+            <span class="copyright-pill">© 2026 Research Toolkit</span><br>
+            Developed by <strong>Moktadir M.A.</strong> and <strong>REN J.Z.</strong>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ============================================================
@@ -2655,57 +3525,59 @@ def page_stratification():
 # ============================================================
 
 def main():
-    st.set_page_config(
-        page_title="Stratification → TrFS-BWM → Global Weights → TrFS-QFD → MILP DSS",
-        page_icon="📊",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
     apply_custom_styling()
+
+    if not check_password():
+        st.stop()
 
     with st.sidebar:
         st.markdown('<div class="section-header">🧭 Navigation</div>', unsafe_allow_html=True)
-        st.markdown("### Modules")
+        st.markdown('### Modules')
+        st.success('✅ Authenticated')
+        if st.button('🚪 Logout', use_container_width=True):
+            logout()
+
         page = st.radio(
-            "Select Module",
+            'Select Module',
             [
-                "1) Stratification Modeler",
-                "2) TrFS-BWM (scenario-aware)",
-                "3) Global TrFS Weights",
-                "4) TrFS-QFD",
-                "5) MILP Optimization"
+                '1) Stratification Modeler',
+                '2) TrFS-BWM (scenario-aware)',
+                '3) Global TrFS Weights',
+                '4) TrFS-QFD',
+                '5) MILP Optimization'
             ],
             index=0,
-            label_visibility="collapsed"
+            label_visibility='collapsed'
         )
 
-        st.markdown("---")
-        st.markdown("### Workflow")
+        st.markdown('---')
+        st.markdown('### Workflow')
         st.markdown("""
-        1. **Stratification Modeler** → Define/interact scenario probabilities  
+        1. **Stratification Modeler** → Define and normalize scenario probabilities  
         2. **TrFS-BWM (scenario-aware)** → Compute aggregated TrFS weights for main or sub-criteria groups  
         3. **Global TrFS Weights** → Multiply aggregated main and local sub-criteria weights to get global sub-criteria weights  
-        4. **TrFS-QFD** → Compute AIj/RIj  
-        5. **MILP Optimization** → Optimize strategy portfolio (Direct averages)  
+        4. **TrFS-QFD** → Compute AIj and RIj rankings  
+        5. **MILP Optimization** → Optimize the strategy portfolio using direct averages  
         """)
 
-    st.markdown("""
-    <div style='text-align: center; padding: 1rem 0 2rem 0;'>
-        <h1 style='color: #1e3a8a; margin-bottom: 0.5rem;'>System-Level TrFS-SBWM-QFD-MILP Decision Support Model</h1>
-        <p style='color: #6b7280; font-size: 1.05rem;'>Integrated Advanced Fuzzy Decision-Support Tool for Stratification, Fuzzy Weighting, QFD Prioritization, and Portfolio Optimization</p>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown('---')
+        st.markdown('Recommended flow: **Stratification → TrFS-BWM → Global Weights → TrFS-QFD → MILP**')
 
-    if page.startswith("1)"):
+    render_sidebar_research_profiles()
+    render_app_header()
+
+    if page.startswith('1)'):
         page_stratification()
-    elif page.startswith("2)"):
+    elif page.startswith('2)'):
         page_trfs_bwm()
-    elif page.startswith("3)"):
+    elif page.startswith('3)'):
         page_global_weights()
-    elif page.startswith("4)"):
+    elif page.startswith('4)'):
         page_trfs_qfd()
     else:
         page_milp()
+
+    render_footer()
 
 
 if __name__ == "__main__":
