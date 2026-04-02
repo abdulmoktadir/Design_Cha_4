@@ -91,31 +91,31 @@ st.markdown("""
         margin: 0;
     }
 
-    .suite-native-card {
-    background: #ffffff;
-    border: 1px solid #dbeafe;
-    border-radius: 18px;
-    padding: 1rem 1rem;
-    min-height: 132px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-   }
+   .suite-native-card {
+        background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+        border: 1px solid #bfdbfe;
+        border-radius: 18px;
+        padding: 1rem 1rem;
+        min-height: 132px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
 
     .suite-native-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 16px 28px rgba(15, 23, 42, 0.10);
-        border-color: #93c5fd;
+        border-color: #60a5fa;
     }
 
     .suite-native-title {
-        color: #0f172a;
+        color: #1e3a8a;
         font-size: 1rem;
         font-weight: 800;
         margin-bottom: 0.35rem;
     }
 
     .suite-native-text {
-        color: #475569;
+        color: #334155;
         font-size: 0.86rem;
         line-height: 1.5;
     }
