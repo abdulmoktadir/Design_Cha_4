@@ -1160,6 +1160,96 @@ def standardize_qfd_weight_df(df: pd.DataFrame) -> pd.DataFrame:
     return qfd_df
 
 
+def _df_to_qfd_paste_blocks(df: pd.DataFrame, name_col: str = "Challenge") -> Tuple[str, str]:
+    """Build ready-to-paste TSV and CSV blocks for the Module 4 weight loader."""
+    qfd_df = standardize_qfd_weight_df(df)
+    export_df = qfd_df.rename(columns={"Challenge": name_col}).copy()
+
+    for c in ["w1", "w2", "w3", "w4"]:
+        export_df[c] = export_df[c].map(lambda v: f"{_to_float(v, 0.0):.5f}")
+
+    tsv_buf = io.StringIO()
+    csv_buf = io.StringIO()
+    export_df.to_csv(tsv_buf, sep="\t", index=False, lineterminator="\n")
+    export_df.to_csv(csv_buf, index=False, lineterminator="\n")
+    return tsv_buf.getvalue().strip(), csv_buf.getvalue().strip()
+
+
+def _milp_default_expert_payload(strategy_names: List[str]) -> Dict[str, pd.DataFrame]:
+    return {
+        "IC_avg": pd.DataFrame({"Strategy": strategy_names, "Avg": 0.0}),
+        "IT_avg": pd.DataFrame({"Strategy": strategy_names, "Avg": 0.0}),
+        "sigma_avg": make_square_df(strategy_names, 0.0),
+        "tau_avg": make_square_df(strategy_names, 0.0),
+    }
+
+
+def _milp_normalize_vector_df(df: Optional[pd.DataFrame], strategy_names: List[str]) -> pd.DataFrame:
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        return pd.DataFrame({"Strategy": strategy_names, "Avg": 0.0})
+
+    out = df.copy()
+    if "Strategy" not in out.columns:
+        out = out.reset_index().rename(columns={out.index.name or "index": "Strategy"})
+    if "Avg" not in out.columns:
+        value_cols = [c for c in out.columns if c != "Strategy"]
+        if value_cols:
+            out = out[["Strategy", value_cols[0]]].rename(columns={value_cols[0]: "Avg"})
+        else:
+            out["Avg"] = 0.0
+
+    out = out[["Strategy", "Avg"]].copy()
+    out["Strategy"] = out["Strategy"].astype(str).str.strip()
+    out = out.drop_duplicates(subset=["Strategy"], keep="last")
+    out = out.set_index("Strategy").reindex(strategy_names)
+    out["Avg"] = out["Avg"].map(lambda v: _to_float(v, 0.0))
+    out.index.name = "Strategy"
+    return out.reset_index()
+
+
+def _milp_normalize_square_df(df: Optional[pd.DataFrame], strategy_names: List[str]) -> pd.DataFrame:
+    if not isinstance(df, pd.DataFrame):
+        return make_square_df(strategy_names, 0.0)
+
+    out = df.copy()
+    out.index = [str(x).strip() for x in out.index]
+    out.columns = [str(c).strip() for c in out.columns]
+    out = out.reindex(index=strategy_names, columns=strategy_names, fill_value=0.0)
+    out = out.apply(lambda col: col.map(lambda v: _to_float(v, 0.0)))
+    np.fill_diagonal(out.values, 0.0)
+    return out
+
+
+def _ensure_milp_avg_expert_store(strategy_names: List[str], n_exp: int) -> None:
+    store = st.session_state.get("milp_avg_experts")
+    if not isinstance(store, dict):
+        store = {}
+
+    normalized_store = {}
+    for raw_key, payload in store.items():
+        try:
+            expert_id = int(raw_key)
+        except Exception:
+            continue
+        normalized_store[expert_id] = payload if isinstance(payload, dict) else {}
+
+    repaired = {}
+    for expert_id in range(1, n_exp + 1):
+        payload = normalized_store.get(expert_id, {})
+        default_payload = _milp_default_expert_payload(strategy_names)
+        repaired[expert_id] = {
+            "IC_avg": _milp_normalize_vector_df(payload.get("IC_avg"), strategy_names),
+            "IT_avg": _milp_normalize_vector_df(payload.get("IT_avg"), strategy_names),
+            "sigma_avg": _milp_normalize_square_df(payload.get("sigma_avg"), strategy_names),
+            "tau_avg": _milp_normalize_square_df(payload.get("tau_avg"), strategy_names),
+        }
+        for key, default_value in default_payload.items():
+            if key not in repaired[expert_id] or repaired[expert_id][key] is None:
+                repaired[expert_id][key] = default_value
+
+    st.session_state["milp_avg_experts"] = repaired
+
+
 def make_rij_editor_df(strategy_names: List[str], rij_values) -> pd.DataFrame:
     arr = np.asarray(rij_values, dtype=float).reshape(-1)
     n = len(strategy_names)
@@ -3135,13 +3225,7 @@ def page_milp():
     if st.session_state.get("milp_avg_store_key") != store_key:
         st.session_state["milp_avg_store_key"] = store_key
         st.session_state["milp_avg_experts"] = {}
-        for e in range(1, n_exp + 1):
-            st.session_state["milp_avg_experts"][e] = {
-                "IC_avg": pd.DataFrame({"Strategy": sy_names, "Avg": 0.0}),
-                "IT_avg": pd.DataFrame({"Strategy": sy_names, "Avg": 0.0}),
-                "sigma_avg": make_square_df(sy_names, 0.0),
-                "tau_avg": make_square_df(sy_names, 0.0),
-            }
+    _ensure_milp_avg_expert_store(sy_names, n_exp)
 
     expert_tabs = st.tabs([f"Expert {e}" for e in range(1, n_exp + 1)])
     for e, tab in enumerate(expert_tabs, 1):
@@ -3196,11 +3280,16 @@ def page_milp():
         return
 
     def get_expert_arrays(eid: int):
-        IC = st.session_state["milp_avg_experts"][eid]["IC_avg"]["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
-        IT = st.session_state["milp_avg_experts"][eid]["IT_avg"]["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+        _ensure_milp_avg_expert_store(sy_names, n_exp)
+        if eid not in st.session_state["milp_avg_experts"]:
+            raise KeyError(f"Expert {eid} input block is missing from session state.")
 
-        sigma = st.session_state["milp_avg_experts"][eid]["sigma_avg"].applymap(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
-        tau = st.session_state["milp_avg_experts"][eid]["tau_avg"].applymap(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+        expert_payload = st.session_state["milp_avg_experts"][eid]
+        IC = expert_payload["IC_avg"]["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+        IT = expert_payload["IT_avg"]["Avg"].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+
+        sigma = expert_payload["sigma_avg"].apply(lambda col: col.map(lambda v: _to_float(v, 0.0))).to_numpy(dtype=float)
+        tau = expert_payload["tau_avg"].apply(lambda col: col.map(lambda v: _to_float(v, 0.0))).to_numpy(dtype=float)
 
         np.fill_diagonal(sigma, 0.0)
         np.fill_diagonal(tau, 0.0)
