@@ -336,84 +336,264 @@ h1, h2, h3 {
 }
 
 .login-page {
-    max-width: 780px;
-    margin: 2.25rem auto 0 auto;
-    padding: 0 0.75rem 1.1rem 0.75rem;
+    position: relative;
+    max-width: 920px;
+    margin: 1.9rem auto 0 auto;
+    padding: 0 0.9rem 1.25rem 0.9rem;
+}
+
+.login-page::before,
+.login-page::after {
+    content: "";
+    position: absolute;
+    inset: auto;
+    border-radius: 999px;
+    filter: blur(12px);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.login-page::before {
+    top: 34px;
+    left: -36px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0.02) 72%);
+}
+
+.login-page::after {
+    bottom: 8px;
+    right: -20px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.16) 0%, rgba(20, 184, 166, 0.02) 72%);
 }
 
 .login-hero-box {
-    background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
-    border-radius: 30px;
-    padding: 2.4rem 2.2rem;
-    margin-bottom: 1.15rem;
-    min-height: 290px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    box-shadow: 0 20px 48px rgba(29, 78, 216, 0.20);
-    border: 1px solid rgba(255,255,255,0.14);
-    text-align: center;
     position: relative;
+    z-index: 1;
+    background:
+        radial-gradient(circle at 86% 18%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.02) 26%),
+        radial-gradient(circle at 16% 110%, rgba(45, 212, 191, 0.18) 0%, rgba(45, 212, 191, 0.02) 28%),
+        linear-gradient(135deg, #081225 0%, #153ea8 45%, #0ea5e9 100%);
+    border-radius: 34px;
+    padding: 1.3rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16), 0 10px 30px rgba(37, 99, 235, 0.16);
+    border: 1px solid rgba(255,255,255,0.18);
     overflow: hidden;
+}
+
+.login-hero-box::before,
+.login-hero-box::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.login-hero-box::before {
+    top: -68px;
+    right: -52px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 72%);
+}
+
+.login-hero-box::after {
+    bottom: -90px;
+    left: -54px;
+    width: 230px;
+    height: 230px;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.18) 0%, rgba(129, 140, 248, 0.02) 72%);
+}
+
+.login-hero-inner {
+    position: relative;
+    z-index: 1;
+    min-height: 310px;
+    border-radius: 26px;
+    padding: 2.2rem 2.15rem 2rem 2.15rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    backdrop-filter: blur(10px);
+}
+
+.login-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.96);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .login-hero-box h1 {
     color: #ffffff !important;
-    font-size: clamp(2.2rem, 4vw, 3.2rem);
-    line-height: 1.14;
-    margin: 0 0 0.85rem 0;
-    letter-spacing: -0.04em;
-    position: relative;
-    z-index: 1;
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    line-height: 1.02;
+    margin: 1rem 0 0.95rem 0;
+    letter-spacing: -0.055em;
+    max-width: 700px;
 }
 
 .login-hero-box p {
     color: rgba(255,255,255,0.93) !important;
-    margin: 0 auto;
-    max-width: 580px;
+    margin: 0;
+    max-width: 640px;
+    font-size: 1.1rem;
+    line-height: 1.72;
+}
+
+.login-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.15rem;
+}
+
+.login-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.48rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #eff6ff;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(10px);
+}
+
+.login-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-top: 1.35rem;
+}
+
+.login-metric-card {
+    padding: 0.92rem 0.95rem;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.login-metric-label {
+    display: block;
+    color: rgba(255,255,255,0.72);
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.login-metric-value {
+    display: block;
+    margin-top: 0.35rem;
+    color: #ffffff;
     font-size: 1.08rem;
-    line-height: 1.65;
-    position: relative;
-    z-index: 1;
+    font-weight: 800;
+}
+
+.login-metric-note {
+    display: block;
+    margin-top: 0.25rem;
+    color: rgba(255,255,255,0.74);
+    font-size: 0.82rem;
+    line-height: 1.45;
 }
 
 .login-form-note {
+    position: relative;
+    z-index: 1;
     text-align: center;
     color: #475569;
-    font-size: 1.02rem;
-    font-weight: 500;
-    margin-bottom: 1.1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
 }
 
 div[data-testid="stForm"] {
-    background: #ffffff;
-    border: 1px solid #dbe4f0;
-    border-radius: 24px;
-    padding: 1.55rem 1.55rem 1.15rem 1.55rem;
-    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
-    max-width: 780px;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,251,255,0.98) 100%);
+    border: 1px solid rgba(219,228,240,0.92);
+    border-radius: 28px;
+    padding: 1.6rem 1.6rem 1.2rem 1.6rem;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08), 0 12px 26px rgba(31, 94, 255, 0.08);
+    max-width: 920px;
     margin: 0 auto;
+}
+
+div[data-testid="stForm"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 28px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.18), rgba(14,165,233,0.06));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }
 
 div[data-testid="stForm"] label p {
     font-size: 1.05rem !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     color: #0f172a !important;
 }
 
 div[data-testid="stForm"] .stTextInput input {
-    min-height: 58px;
+    min-height: 60px;
     font-size: 1rem;
-    border-radius: 14px;
-    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    padding: 0.92rem 1rem;
+    border: 1px solid #d8e2ef;
+    background: rgba(248,250,252,0.95);
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+div[data-testid="stForm"] .stTextInput input:focus {
+    border-color: rgba(37, 99, 235, 0.55);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
 }
 
 div[data-testid="stForm"] .stButton > button,
 div[data-testid="stForm"] .stFormSubmitButton > button {
-    min-height: 54px;
-    border-radius: 14px;
+    min-height: 56px;
+    border-radius: 16px;
     font-size: 1.05rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.login-helper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.login-helper span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.42rem 0.8rem;
+    background: rgba(255,255,255,0.72);
+    color: #64748b;
+    font-size: 0.8rem;
+    border: 1px solid rgba(219,228,240,0.92);
 }
 
 .app-footer {
@@ -440,17 +620,42 @@ div[data-testid="stForm"] .stFormSubmitButton > button {
 @media (max-width: 900px) {
     .login-page {
         max-width: 100%;
-        margin-top: 1.5rem;
+        margin-top: 1.15rem;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
     }
 
     .login-hero-box {
+        border-radius: 26px;
+        padding: 0.8rem;
+    }
+
+    .login-hero-inner {
         min-height: auto;
-        padding: 1.8rem 1.25rem;
-        border-radius: 24px;
+        padding: 1.45rem 1.1rem 1.3rem 1.1rem;
+        border-radius: 22px;
+    }
+
+    .login-hero-box h1 {
+        font-size: 2.2rem;
+        line-height: 1.08;
     }
 
     .login-hero-box p {
-        font-size: 1rem;
+        font-size: 0.98rem;
+    }
+
+    .login-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .login-pill-row {
+        gap: 0.5rem;
+    }
+
+    div[data-testid="stForm"] {
+        padding: 1.2rem 1.05rem 1rem 1.05rem;
+        border-radius: 22px;
     }
 }
 
@@ -474,20 +679,47 @@ def check_password():
 
     expected_password = st.secrets.get("APP_PASSWORD", None)
 
-    left, center, right = st.columns([0.45, 3.6, 0.45])
+    left, center, right = st.columns([0.25, 4.4, 0.25])
     with center:
         st.markdown(
             """
             <div class="login-page">
                 <div class="login-hero-box">
-                    <h1>Dynamic Fuzzy Decision Platform</h1>
-                    <p>
-                        Secure access to the Fuzzy Delphi, Fuzzy BWM, Fuzzy LBWA,
-                        Hybrid Integration, and Fuzzy Bonferroni CoCoSo workspace.
-                    </p>
+                    <div class="login-hero-inner">
+                        <div class="login-badge">Secure research workspace</div>
+                        <h1>Dynamic Fuzzy Decision Platform</h1>
+                        <p>
+                            Enter the protected analytics environment for fuzzy screening,
+                            weighting, hybrid synthesis, and alternative ranking in one polished workspace.
+                        </p>
+                        <div class="login-pill-row">
+                            <span class="login-pill">Fuzzy Delphi</span>
+                            <span class="login-pill">Fuzzy BWM</span>
+                            <span class="login-pill">Fuzzy LBWA</span>
+                            <span class="login-pill">Hybrid Integration</span>
+                            <span class="login-pill">Bonferroni CoCoSo</span>
+                        </div>
+                        <div class="login-metrics">
+                            <div class="login-metric-card">
+                                <span class="login-metric-label">Modules</span>
+                                <span class="login-metric-value">5 integrated tools</span>
+                                <span class="login-metric-note">From expert screening to final ranking.</span>
+                            </div>
+                            <div class="login-metric-card">
+                                <span class="login-metric-label">Access</span>
+                                <span class="login-metric-value">Password protected</span>
+                                <span class="login-metric-note">Controlled entry for your research workspace.</span>
+                            </div>
+                            <div class="login-metric-card">
+                                <span class="login-metric-label">Output</span>
+                                <span class="login-metric-value">Decision-ready insights</span>
+                                <span class="login-metric-note">Clear weighting, integration, and ranking results.</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="login-form-note">
-                    Sign in with the application password
+                    Sign in with the application password to continue
                 </div>
             </div>
             """,
@@ -508,6 +740,11 @@ def check_password():
                 placeholder="Enter application password",
             )
             submitted = st.form_submit_button("Log in", use_container_width=True)
+
+        st.markdown(
+            '<div class="login-helper"><span>🔒 Protected workspace · Researcher profile and copyright footer enabled after sign-in</span></div>',
+            unsafe_allow_html=True,
+        )
 
         if submitted:
             if hmac.compare_digest(password, str(expected_password)):
