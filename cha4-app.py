@@ -742,7 +742,7 @@ def format_delphi_scale_table():
 
 def render_delphi_results(clean_scores_df, summary_df, threshold):
     st.markdown("#### Cleaned response matrix")
-    clean_it2_df = clean_scores_df.copy().applymap(lambda x: format_it2(DELPHI_NUMERIC_SCALE[int(x)]) if pd.notna(x) and int(x) in DELPHI_NUMERIC_SCALE else "")
+    clean_it2_df = clean_scores_df.copy().map(lambda x: format_it2(DELPHI_NUMERIC_SCALE[int(x)]) if pd.notna(x) and int(x) in DELPHI_NUMERIC_SCALE else "")
     st.dataframe(clean_it2_df, use_container_width=True)
     out = summary_df.copy()
     out["Aggregated IT2TrFS"] = out.apply(lambda row: format_it2(((row["a"], row["b"], row["c"], row["d"], row["uh1"], row["uh2"]), (row["e"], row["f"], row["g"], row["h"], row["lh1"], row["lh2"]))), axis=1)
@@ -800,7 +800,7 @@ def delphi_app():
                     st.warning("No Delphi criteria columns selected.")
                 else:
                     response_block = df_raw.iloc[int(start_row) - 1:int(end_row)].copy()
-                    scores_df = response_block[criteria_cols].applymap(parse_loose_numeric)
+                    scores_df = response_block[criteria_cols].map(parse_loose_numeric)
                     scores_df = scores_df.where(scores_df.isin([1, 2, 3, 4, 5]), np.nan)
                     valid_rows = scores_df.notna().any(axis=1)
                     scores_df = scores_df.loc[valid_rows].reset_index(drop=True)
@@ -833,7 +833,7 @@ def delphi_app():
         st.markdown("**Manual Delphi score matrix (1–5)**")
         edited_scores = st.data_editor(st.session_state.delphi_manual_df, use_container_width=True, column_config={c: st.column_config.NumberColumn(c, min_value=1, max_value=5, step=1, format="%d") for c in criteria_names}, key="delphi_manual_editor")
         if st.button("✅ Run manual IT2TrFS-Delphi", type="primary", use_container_width=True, key="delphi_manual_run"):
-            clean_scores = edited_scores.applymap(parse_loose_numeric)
+            clean_scores = edited_scores.map(parse_loose_numeric)
             clean_scores = clean_scores.where(clean_scores.isin([1, 2, 3, 4, 5]), np.nan)
             _, summary_df = aggregate_it2_delphi_from_scores(clean_scores)
             render_delphi_results(clean_scores, summary_df, threshold_manual)
