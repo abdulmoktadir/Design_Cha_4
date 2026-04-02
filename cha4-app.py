@@ -19,8 +19,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
+=====================================
 CSS = """
+====================================
 <style>
 :root {
     --bg: #f6f3fb;
@@ -204,7 +205,7 @@ def _compact_name_editor(
     with sum1:
         st.metric('Count', int(count))
     with sum2:
-        st.caption('Compact input mode keeps the page shorter. Current preview: ' + preview)
+        st.caption('Current preview: ' + preview)
 
     with st.expander(f"Edit {panel_title.lower()}", expanded=False):
         st.caption('Blank entries will automatically fall back to default labels.')
@@ -246,14 +247,14 @@ def check_password():
                 <div class="login-hero-box">
                     <div class="login-hero-inner">
                         <div class="login-badge">Protected research login</div>
-                        <h1>Integrated Decision Research Studio</h1>
+                        <h1>🔬 Integrated Systsem-Level Decision Support Studio</h1>
                         <p>Enter the secured workspace for stratification modeling, expert-weight analytics, DFS-AHP, DFS-QFD, and MILP-based portfolio optimization in one deployment-ready system.</p>
                         <div class="login-pill-row">
-                            <span class="login-pill">Stratification</span>
-                            <span class="login-pill">Expert Weights</span>
-                            <span class="login-pill">DFS-AHP</span>
-                            <span class="login-pill">DFS-QFD</span>
-                            <span class="login-pill">MILP</span>
+                            <span class="login-pill">📊 Stratification</span>
+                            <span class="login-pill">👥 Expert Weights</span>
+                            <span class="login-pill">🧮 DFS-AHP</span>
+                            <span class="login-pill">📈 DFS-QFD</span>
+                            <span class="login-pill">🎯 MILP</span>
                         </div>
                         <div class="login-metrics">
                             <div class="login-metric-card">
@@ -263,7 +264,7 @@ def check_password():
                             </div>
                             <div class="login-metric-card">
                                 <span class="login-metric-label">Workspace</span>
-                                <span class="login-metric-value">5 linked analytical modules</span>
+                                <span class="login-metric-value">5 linked advanced analytical modules</span>
                                 <span class="login-metric-note">From scenario logic to final strategy selection.</span>
                             </div>
                             <div class="login-metric-card">
@@ -354,7 +355,6 @@ def render_sidebar_research_profiles():
     box = st.sidebar.container()
     box.markdown("---")
     box.markdown('<div class="sidebar-section-title">Researcher Profiles</div>', unsafe_allow_html=True)
-    box.markdown('<div class="sidebar-section-note">Profiles remain fixed in the left sidebar for deployment-ready presentation.</div>', unsafe_allow_html=True)
     render_sidebar_profile_card(
         box,
         'Prof. J.Z. Ren 任競爭',
@@ -363,7 +363,7 @@ def render_sidebar_research_profiles():
         get_asset_path('prof_jz_ren.png'),
         'Process systems engineering for energy, environment, and sustainability; recipient of the 2022 APEC ASPIRE Prize.',
         full_bio='Dr. Jingzheng Ren is an Associate Professor at The Hong Kong Polytechnic University. His research focuses on process systems engineering for energy, environment and sustainability, including innovative industrial processes, decision tools, and optimization models for carbon-neutral industrial systems.',
-        tag='Lead Researcher',
+        tag='Supervisor',
     )
     render_sidebar_profile_card(
         box,
@@ -374,7 +374,7 @@ def render_sidebar_research_profiles():
         'Research interests include sustainable supply chains, logistics, risk management, Industry 4.0, and circular economy.',
         full_bio='Md. Abdul Moktadir is pursuing a PhD in Industrial and Systems Engineering at The Hong Kong Polytechnic University and serves as an Assistant Professor of Leather Products Engineering at the University of Dhaka.',
         extras=['Affiliation: University of Dhaka', 'Program: PolyU Presidential PhD Fellow'],
-        tag='Co-Researcher',
+        tag='Lead Researcher',
     )
 
 
@@ -382,13 +382,11 @@ def render_app_header():
     st.markdown(
         """
         <div class="hero-card">
-            <div class="hero-eyebrow">Protected multi-module research workspace</div>
-            <div class="hero-title">Dynamic Stratification, DFS, QFD, and MILP Decision Studio</div>
-            <div class="hero-subtitle">Deployment-ready integrated environment for scenario stratification, expert covariance analysis, dual-fuzzy synthesis, quality-function deployment, and optimization-driven strategy portfolio selection.</div>
+            <div class="hero-eyebrow">Multi-module system-level decision analytics workspace</div>
+            <div class="hero-title">System-Level Dynamic ML-based DFS-Stratified-QFD-MILP Decision Studio</div>
+            <div class="hero-subtitle">An intelligent integrated decision analytic model for scenario stratification, expert weight determination, decomposed fuzzy synthesis, quality-function deployment, and optimization-driven strategy portfolio selection.</div>
             <div class="hero-grid">
-                <div class="info-card"><span class="info-label">Security</span><strong>Password-protected access</strong><small>Safer presentation and sharing in research or academic deployment settings.</small></div>
-                <div class="info-card"><span class="info-label">Research flow</span><strong>Five connected analytical modules</strong><small>Move from structured inputs to rankings, weighted matrices, and optimal portfolios.</small></div>
-                <div class="info-card"><span class="info-label">Presentation</span><strong>Professional deployable interface</strong><small>Polished visuals, sidebar researcher profiles, and export-ready outputs.</small></div>
+                <div class="info-card"><span class="info-label">Research flow</span><strong>Five connected advanced analytical modules</strong><small>Move from stratification, structured inputs to expert weight determination, weight determination, rankings, weighted matrices, and optimal portfolios.</small></div>
             </div>
         </div>
         """,
@@ -1398,7 +1396,7 @@ def compute_expected_matrix(df_O, df_ML, df_P):
 
 
 def page_expert_covariance_model():
-    render_module_banner("👥", "Expert Weight Determination Model", "Covariance-based expert weighting with normalized data, covariance structure, and eigenvector-driven priority estimation.", badge="Module 2")
+    render_module_banner("👥", "ML Model for Expert Weight Determination", "ML-based expert weighting with normalized data, covariance structure, and eigenvector-driven priority estimation.", badge="Module 2")
 
     st.markdown("### Configuration")
     cfg1, cfg2 = st.columns(2)
@@ -1667,7 +1665,7 @@ def _build_dfs_ahp_export_excel(
     return out.getvalue()
 
 def page_dfs_ahp():
-    render_module_banner("🧮", "DFS-AHP Scenario → Expert → Scenario Fusion", "Integrate scenario probabilities, expert judgments, and decomposed dual-fuzzy weights into a unified fused priority structure.", badge="Module 3")
+    render_module_banner("🧮", "DFS-AHP Scenario → Expert → Scenario Fusion", "Integrate scenario probabilities, expert judgments, and decomposed fuzzy weights into a unified fused priority structure.", badge="Module 3")
     engine = DFSAHP()
 
     strat_sent_df = st.session_state.get("strat_to_ahp_df")
@@ -2014,11 +2012,11 @@ def page_dfs_ahp():
 
 
 def page_dfs_qfd():
-    render_module_banner("📊", "DFS-QFD Analysis", "Map requirement criteria to mitigation strategies and compute final ReP-based prioritization through dual-fuzzy relationship modeling.", badge="Module 4")
+    render_module_banner("📊", "DFS-QFD Analysis", "Map requirement criteria to mitigation strategies and compute final ReP-based prioritization through DFS relationship modeling.", badge="Module 4")
 
     st.markdown('<div class="config-shell">', unsafe_allow_html=True)
     st.markdown("### Configuration")
-    st.markdown('<div class="config-lead">Configure requirement criteria, mitigation strategies, and expert weights directly inside the DFS-QFD module so the sidebar stays focused on navigation and researcher information.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="config-lead">Configure requirement criteria, mitigation strategies, and expert weights directly inside the DFS-QFD module.</div>', unsafe_allow_html=True)
     cfg1, cfg2, cfg3 = st.columns(3)
     with cfg1:
         n_rc = int(st.number_input("Number of RCs", min_value=2, max_value=50, value=9, step=1, key="qfd_nrc"))
@@ -2560,7 +2558,7 @@ def main():
         "Select module",
         [
             "1) Stratification Modeler",
-            "2) Expert Covariance Model",
+            "2) ML Model",
             "3) DFS-AHP",
             "4) DFS-QFD",
             "5) MILP Optimization",
