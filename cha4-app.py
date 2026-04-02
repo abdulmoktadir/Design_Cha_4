@@ -20,8 +20,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 =====================================
+# CSS Style
+=====================================
 CSS = """
-====================================
 <style>
 :root {
     --bg: #f6f3fb;
