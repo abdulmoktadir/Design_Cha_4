@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="IVFFS Delphi · WINGS · TODIM Toolkit",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 EPS = 1e-12
@@ -235,18 +235,230 @@ st.markdown(
             border-top: 1px solid #e2e8f0;
         }
 
+       st.markdown(
+    """
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .stApp {
+            background-color: #f8fafc;
+        }
+
+        [data-testid="stSidebar"] {
+            background-color: #0f172a;
+            border-right: none;
+        }
+
+        [data-testid="stSidebar"] .stMarkdown,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] div {
+            color: #e2e8f0;
+        }
+
+        [data-testid="stSidebar"] .stButton > button {
+            background: transparent;
+            color: #f8fafc;
+            border: 1px solid #94a3b8;
+            border-radius: 10px;
+        }
+
+        [data-testid="stSidebar"] .stButton > button:hover {
+            border-color: #60a5fa;
+            color: white;
+        }
+
+        .suite-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 45%, #06b6d4 100%);
+            border-radius: 24px;
+            padding: 1.55rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 18px 40px rgba(29, 78, 216, 0.18);
+            border: 1px solid rgba(255,255,255,0.14);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .suite-hero::before {
+            content: "";
+            position: absolute;
+            top: -42px;
+            right: -42px;
+            width: 190px;
+            height: 190px;
+            background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 72%);
+            border-radius: 50%;
+        }
+
+        .suite-hero-title {
+            color: #ffffff;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 0 0.35rem 0;
+            letter-spacing: -0.03em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .suite-hero-subtitle {
+            color: rgba(255,255,255,0.92);
+            font-size: 1rem;
+            line-height: 1.55;
+            max-width: 900px;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .suite-native-card {
+            background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 18px;
+            padding: 1rem;
+            min-height: 132px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 1rem;
+        }
+
+        .suite-native-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, 0.10);
+        }
+
+        .suite-native-title {
+            color: #1e3a8a;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 0.35rem;
+        }
+
+        .suite-native-text {
+            color: #334155;
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .suite-badge-row {
+            display: flex;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            margin-top: 0.9rem;
+        }
+
+        .suite-badge {
+            display: inline-block;
+            padding: 0.36rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.16);
+        }
+
+        .page-banner {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 55%, #ec4899 100%);
+            border-radius: 20px;
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1.15rem;
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.18);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+
+        .page-banner.green {
+            background: linear-gradient(135deg, #059669 0%, #0ea5e9 55%, #2563eb 100%);
+        }
+
+        .page-banner.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 55%, #ec4899 100%);
+        }
+
+        .page-banner.slate {
+            background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
+        }
+
+        .page-banner-title {
+            color: white;
+            font-size: 1.65rem;
+            font-weight: 800;
+            margin: 0 0 0.3rem 0;
+            letter-spacing: -0.02em;
+        }
+
+        .page-banner-subtitle {
+            color: rgba(255,255,255,0.92);
+            font-size: 0.96rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .sidebar-section-title {
+            color: #e2e8f0 !important;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 0.25rem 0 0.75rem 0;
+        }
+
+        .sidebar-profile-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 16px;
+            padding: 0.85rem;
+            margin-bottom: 0.85rem;
+            backdrop-filter: blur(6px);
+        }
+
+        .sidebar-profile-name {
+            color: #f8fafc;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-top: 0.55rem;
+            margin-bottom: 0.2rem;
+            line-height: 1.35;
+        }
+
+        .sidebar-profile-role {
+            color: #cbd5e1;
+            font-size: 0.78rem;
+            line-height: 1.35;
+            margin-bottom: 0.45rem;
+        }
+
+        .sidebar-profile-text {
+            color: #94a3b8;
+            font-size: 0.76rem;
+            line-height: 1.5;
+            margin-bottom: 0.45rem;
+        }
+
+        .app-footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            padding: 1rem;
+            color: #64748b;
+            font-size: 0.75rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
         .login-page {
-            max-width: 520px;
-            margin: 2.5rem auto 0 auto;
-            padding: 0 0.5rem 1rem 0.5rem;
+            max-width: 760px;
+            margin: 3rem auto 0 auto;
+            padding: 0 0.75rem 1rem 0.75rem;
         }
 
         .login-hero-box {
             background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #06b6d4 100%);
-            border-radius: 24px;
-            padding: 1.35rem 1.25rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 14px 32px rgba(29, 78, 216, 0.18);
+            border-radius: 28px;
+            padding: 2.2rem 2rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 18px 40px rgba(29, 78, 216, 0.18);
             border: 1px solid rgba(255,255,255,0.14);
             text-align: center;
             position: relative;
@@ -255,9 +467,11 @@ st.markdown(
 
         .login-hero-box h1 {
             color: #ffffff !important;
-            font-size: 2.1rem;
-            margin: 0 0 0.45rem 0;
-            letter-spacing: -0.03em;
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin: 0 0 0.8rem 0;
+            letter-spacing: -0.04em;
             position: relative;
             z-index: 1;
         }
@@ -265,8 +479,8 @@ st.markdown(
         .login-hero-box p {
             color: rgba(255,255,255,0.92) !important;
             margin: 0;
-            font-size: 0.98rem;
-            line-height: 1.55;
+            font-size: 1.2rem;
+            line-height: 1.7;
             position: relative;
             z-index: 1;
         }
@@ -274,16 +488,36 @@ st.markdown(
         .login-form-note {
             text-align: center;
             color: #64748b;
-            font-size: 0.86rem;
-            margin-bottom: 0.9rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
         }
 
         div[data-testid="stForm"] {
             background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 18px;
-            padding: 1.2rem 1.2rem 0.9rem 1.2rem;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+            border-radius: 22px;
+            padding: 1.6rem 1.6rem 1.2rem 1.6rem;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        div[data-testid="stForm"] input {
+            font-size: 1.05rem !important;
+            padding-top: 0.8rem !important;
+            padding-bottom: 0.8rem !important;
+        }
+
+        div[data-testid="stForm"] label {
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+        }
+
+        div[data-testid="stForm"] button {
+            min-height: 52px;
+            font-size: 1.05rem !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
         }
 
         .stDataFrame, .stDataEditor {
@@ -299,6 +533,30 @@ st.markdown(
             text-align: center;
             border: 1px solid #eef2f6;
         }
+
+        @media (max-width: 768px) {
+            .login-page {
+                max-width: 100%;
+                margin-top: 1.5rem;
+            }
+
+            .login-hero-box {
+                padding: 1.5rem 1.2rem;
+                border-radius: 22px;
+            }
+
+            .login-hero-box h1 {
+                font-size: 2rem;
+            }
+
+            .login-hero-box p {
+                font-size: 1rem;
+            }
+
+            div[data-testid="stForm"] {
+                padding: 1.1rem 1rem 0.9rem 1rem;
+            }
+        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -311,7 +569,6 @@ def logout():
     st.session_state.authenticated = False
     st.rerun()
 
-
 def check_password():
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
@@ -321,7 +578,9 @@ def check_password():
 
     expected_password = st.secrets.get("APP_PASSWORD", None)
 
-    left, center, right = st.columns([1.15, 1.3, 1.15])
+    # wider layout for login
+    left, center, right = st.columns([0.6, 2.8, 0.6])
+
     with center:
         st.markdown(
             """
@@ -365,8 +624,6 @@ def check_password():
                 st.error("Incorrect password.")
 
     return False
-
-
 # =========================================================
 # UI HELPERS
 # =========================================================
