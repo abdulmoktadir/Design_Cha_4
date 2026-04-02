@@ -1528,6 +1528,144 @@ def page_expert_covariance_model():
         )
 
 
+
+def _ahp_round_export_df(df: pd.DataFrame, digits: int = 6) -> pd.DataFrame:
+    out = df.copy()
+    for col in out.columns:
+        try:
+            out[col] = pd.to_numeric(out[col], errors="ignore")
+        except Exception:
+            pass
+        if pd.api.types.is_numeric_dtype(out[col]):
+            out[col] = out[col].round(digits)
+    return out
+
+
+def _build_dfs_ahp_export_excel(
+    criteria: List[str],
+    scenario_titles: List[str],
+    scenario_probs_norm: List[float],
+    expert_weights: List[float],
+    scenario_expert_results: List[List[pd.DataFrame]],
+    scenario_aggregated_results: List[pd.DataFrame],
+    scenario_expert_cr: List[List[Dict[str, Any]]],
+    final_fused_df: pd.DataFrame,
+    cr_method_label: str,
+) -> bytes:
+    out = io.BytesIO()
+
+    with pd.ExcelWriter(out, engine="openpyxl") as writer:
+        settings_df = pd.DataFrame(
+            {
+                "Setting": [
+                    "Main CR display/pass method",
+                    "Criteria count",
+                    "Scenario count",
+                    "Experts per scenario",
+                ],
+                "Value": [
+                    cr_method_label,
+                    len(criteria),
+                    len(scenario_titles),
+                    len(expert_weights),
+                ],
+            }
+        )
+        settings_df.to_excel(writer, index=False, sheet_name="Run_Settings")
+
+        criteria_df = pd.DataFrame({"Criterion": criteria})
+        criteria_df.to_excel(writer, index=False, sheet_name="Criteria")
+
+        scenario_prob_df = pd.DataFrame(
+            {
+                "Scenario": scenario_titles,
+                "Normalized Probability": [float(x) for x in scenario_probs_norm],
+            }
+        )
+        _ahp_round_export_df(scenario_prob_df).to_excel(writer, index=False, sheet_name="Scenario_Probabilities")
+
+        expert_weight_df = pd.DataFrame(
+            {
+                "Expert": [f"Expert {i+1}" for i in range(len(expert_weights))],
+                "Normalized Weight": [float(w) for w in expert_weights],
+            }
+        )
+        _ahp_round_export_df(expert_weight_df).to_excel(writer, index=False, sheet_name="Expert_Weights")
+
+        final_export = final_fused_df.copy()
+        if "Normalized Weight" in final_export.columns and "Final Weight" not in final_export.columns:
+            final_export["Final Weight"] = final_export["Normalized Weight"]
+        _ahp_round_export_df(final_export).to_excel(writer, index=False, sheet_name="Final_Fused_Results")
+
+        for s_idx, title in enumerate(scenario_titles):
+            agg_df = scenario_aggregated_results[s_idx].copy()
+            _ahp_round_export_df(agg_df).to_excel(
+                writer,
+                index=False,
+                sheet_name=f"S{s_idx+1}_Aggregate",
+            )
+
+            for e_idx, exp_df in enumerate(scenario_expert_results[s_idx]):
+                _ahp_round_export_df(exp_df).to_excel(
+                    writer,
+                    index=False,
+                    sheet_name=f"S{s_idx+1}_E{e_idx+1}_DFS",
+                )
+
+                cr_pack = scenario_expert_cr[s_idx][e_idx]
+                gm = cr_pack["GM"]
+                ev = cr_pack["EIGEN"]
+
+                cr_summary_df = pd.DataFrame(
+                    [
+                        {
+                            "Scenario": title,
+                            "Expert": f"Expert {e_idx+1}",
+                            "Method": "Geometric mean",
+                            "lambda_max": gm["lambda_max"],
+                            "CI": gm["CI_AHP"],
+                            "RI": gm["RI"],
+                            "CR": gm["CR"],
+                        },
+                        {
+                            "Scenario": title,
+                            "Expert": f"Expert {e_idx+1}",
+                            "Method": "Eigenvalue (CR′)",
+                            "lambda_max": ev["lambda_max"],
+                            "CI": ev["CI_AHP"],
+                            "RI": ev["RI"],
+                            "CR": ev["CR"],
+                        },
+                    ]
+                )
+                _ahp_round_export_df(cr_summary_df).to_excel(
+                    writer,
+                    index=False,
+                    sheet_name=f"S{s_idx+1}_E{e_idx+1}_CR",
+                )
+
+                ahp_weights_df = pd.DataFrame(
+                    {
+                        "Criterion": criteria,
+                        "Geometric mean weight": gm["weights"],
+                        "Eigenvalue weight": ev["weights"],
+                    }
+                )
+                _ahp_round_export_df(ahp_weights_df).to_excel(
+                    writer,
+                    index=False,
+                    sheet_name=f"S{s_idx+1}_E{e_idx+1}_AHPW",
+                )
+
+                ahp_matrix_df = pd.DataFrame(cr_pack["A"], index=criteria, columns=criteria)
+                _ahp_round_export_df(ahp_matrix_df.reset_index().rename(columns={"index": "Criterion"})).to_excel(
+                    writer,
+                    index=False,
+                    sheet_name=f"S{s_idx+1}_E{e_idx+1}_AHPM",
+                )
+
+    return out.getvalue()
+
 def page_dfs_ahp():
     render_module_banner("🧮", "DFS-AHP Scenario → Expert → Scenario Fusion", "Integrate scenario probabilities, expert judgments, and decomposed dual-fuzzy weights into a unified fused priority structure.", badge="Module 3")
     engine = DFSAHP()
@@ -1705,6 +1843,9 @@ def page_dfs_ahp():
         st.session_state["ahp_final_fused_weights"] = final_fused_df
         st.session_state["ahp_scenario_probs_norm"] = scen_probs_norm
         st.session_state["ahp_final_weights"] = final_fused_df.copy()
+        st.session_state["ahp_scenario_titles"] = scenario_tab_titles
+        st.session_state["ahp_expert_weights"] = ew_norm
+        st.session_state["ahp_cr_method_label"] = cr_method
 
         if all_invalid:
             st.warning("Unknown terms treated as neutral: " + ", ".join(sorted(all_invalid)))
@@ -1791,6 +1932,47 @@ def page_dfs_ahp():
                 final_show[col] = final_show[col].astype(float).round(6)
         st.dataframe(final_show, use_container_width=True)
         st.bar_chart(final_fused_df.set_index("Criterion")[["Normalized Weight"]], use_container_width=True)
+
+    if "ahp_final_fused_weights" in st.session_state:
+        st.subheader("Download DFS-AHP results")
+        export_titles = st.session_state.get("ahp_scenario_titles", scenario_tab_titles)
+        export_probs = st.session_state.get("ahp_scenario_probs_norm", scen_probs)
+        export_expert_weights = st.session_state.get("ahp_expert_weights", ew_norm)
+        export_excel = _build_dfs_ahp_export_excel(
+            criteria=st.session_state.get("ahp_criteria", criteria),
+            scenario_titles=export_titles,
+            scenario_probs_norm=export_probs,
+            expert_weights=export_expert_weights,
+            scenario_expert_results=st.session_state["ahp_scenario_expert_results"],
+            scenario_aggregated_results=st.session_state["ahp_scenario_aggregated_results"],
+            scenario_expert_cr=st.session_state["ahp_scenario_expert_cr"],
+            final_fused_df=st.session_state["ahp_final_fused_weights"],
+            cr_method_label=st.session_state.get("ahp_cr_method_label", cr_method),
+        )
+        final_csv_df = st.session_state["ahp_final_fused_weights"].copy()
+        if "Normalized Weight" in final_csv_df.columns and "Final Weight" not in final_csv_df.columns:
+            final_csv_df["Final Weight"] = final_csv_df["Normalized Weight"]
+        final_csv = _ahp_round_export_df(final_csv_df).to_csv(index=False).encode("utf-8")
+
+        dl1, dl2 = st.columns(2)
+        with dl1:
+            st.download_button(
+                "Download DFS-AHP Excel",
+                data=export_excel,
+                file_name="dfs_ahp_results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                key="ahp_download_excel",
+            )
+        with dl2:
+            st.download_button(
+                "Download final fused CSV",
+                data=final_csv,
+                file_name="dfs_ahp_final_fused_results.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="ahp_download_csv",
+            )
 
     st.subheader("Send RC decomposed weights (a,b,c,d) to DFS-QFD")
     if "ahp_final_fused_weights" not in st.session_state:
