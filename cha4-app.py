@@ -479,12 +479,19 @@ def _ensure_strat_store(num_events: int) -> None:
 def page_stratification():
     render_module_banner("🧭", "Stratification Modeler", "Network-based stratification dashboard for base events, interaction scenarios, and probability propagation.", badge="Module 1")
 
-    st.sidebar.subheader("Stratification settings")
-    num_events = int(st.sidebar.number_input("Base Event Count", 1, 20, 4, key="strat_num_events"))
-    precision = st.sidebar.slider("Graph Precision (Decimals)", 2, 6, 4, key="strat_precision")
-    show_labels = st.sidebar.checkbox("Show Labels on Graph", value=True, key="strat_show_labels")
-    normalize = st.sidebar.checkbox("Normalize to 100%", value=True, key="strat_normalize")
-    st.sidebar.info("Input Mode: Percentages (%)")
+    st.markdown('<div class="config-shell">', unsafe_allow_html=True)
+    st.markdown('<div class="config-lead">Configure the number of base events and graph-display options directly inside the Stratification Modeler so the sidebar remains dedicated to navigation and researcher information.</div>', unsafe_allow_html=True)
+    cfg1, cfg2, cfg3, cfg4 = st.columns([1.15, 1.0, 1.0, 1.0], gap="medium")
+    with cfg1:
+        num_events = int(st.number_input("Base Event Count", 1, 20, 4, key="strat_num_events"))
+    with cfg2:
+        precision = st.slider("Graph Precision (Decimals)", 2, 6, 4, key="strat_precision")
+    with cfg3:
+        show_labels = st.checkbox("Show Labels on Graph", value=True, key="strat_show_labels")
+    with cfg4:
+        normalize = st.checkbox("Normalize to 100%", value=True, key="strat_normalize")
+    st.caption("Input Mode: Percentages (%)")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     _ensure_strat_store(num_events)
 
