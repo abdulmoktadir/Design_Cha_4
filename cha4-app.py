@@ -38,6 +38,77 @@ st.markdown("""
         background-color: #f8fafc;
     }
 
+    /* ===== Main workspace banner (right side / main body) ===== */
+    .workspace-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 50%, #06b6d4 100%);
+        border-radius: 22px;
+        padding: 1.35rem 1.45rem;
+        margin-bottom: 1.1rem;
+        box-shadow: 0 14px 32px rgba(29, 78, 216, 0.18);
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+    .workspace-banner-title {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin: 0 0 0.35rem 0;
+        letter-spacing: -0.03em;
+    }
+    .workspace-banner-subtitle {
+        color: rgba(255,255,255,0.92);
+        font-size: 0.98rem;
+        line-height: 1.55;
+        margin: 0 0 0.95rem 0;
+    }
+    .workspace-chip-wrap {
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .workspace-chip {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.34rem 0.78rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.14);
+        color: #ffffff;
+        border: 1px solid rgba(255,255,255,0.20);
+        backdrop-filter: blur(5px);
+    }
+
+    /* ===== Sidebar expander styling: blue / grey ===== */
+    [data-testid="stSidebar"] div[data-testid="stExpander"] {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 14px;
+        background: rgba(148, 163, 184, 0.08);
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+    }
+    [data-testid="stSidebar"] div[data-testid="stExpander"] details {
+        border-radius: 14px;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary {
+        background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(71,85,105,0.34));
+        border-radius: 12px;
+        padding: 0.2rem 0.35rem;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary:hover {
+        background: linear-gradient(135deg, rgba(59,130,246,0.30), rgba(100,116,139,0.40));
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary p,
+    [data-testid="stSidebar"] div[data-testid="stExpander"] summary span {
+        color: #e2e8f0 !important;
+        font-weight: 700;
+    }
+
+    [data-testid="stSidebar"] div[data-testid="stExpander"] details[open] > summary {
+        background: linear-gradient(135deg, rgba(37,99,235,0.30), rgba(71,85,105,0.45));
+    }
+
     /* Sidebar */
     [data-testid="stSidebar"] {
         background-color: #0f172a;
@@ -534,7 +605,23 @@ def render_page_banner(title, subtitle, theme="default"):
         """,
         unsafe_allow_html=True,
     )
-
+def render_workspace_banner():
+    st.markdown(
+        """
+        <div class="workspace-banner">
+            <div class="workspace-banner-title">🧠 IT2TrFS MCDM Suite</div>
+            <div class="workspace-banner-subtitle">
+                A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
+            </div>
+            <div class="workspace-chip-wrap">
+                <span class="workspace-chip">Delphi</span>
+                <span class="workspace-chip">WINGS</span>
+                <span class="workspace-chip">CoCoSo</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 def dataframe_dict_to_excel_bytes(sheet_map):
     output = io.BytesIO()
@@ -1409,23 +1496,6 @@ def wings_app():
 # MAIN NAVIGATION
 # ============================================================
 def main():
-    st.sidebar.markdown(
-        """
-        <div class="sidebar-brand">
-            <h2>🧠 IT2TrFS MCDM Suite</h2>
-            <p>
-                A professional decision analytics workspace for Delphi, WINGS, and CoCoSo.
-            </p>
-            <div class="sidebar-chip-wrap">
-                <span class="sidebar-chip">Delphi</span>
-                <span class="sidebar-chip">WINGS</span>
-                <span class="sidebar-chip">CoCoSo</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
     page = st.sidebar.radio(
         "Navigate",
         ["IT2TrFS-Delphi", "IT2TrFS-WINGS", "IT2TrFS-CoCoSo"],
@@ -1436,6 +1506,9 @@ def main():
     if st.sidebar.button("🚪 Logout", use_container_width=True, type="secondary"):
         logout()
         st.rerun()
+
+    # Main-body suite banner (right side)
+    render_workspace_banner()
 
     if page == "IT2TrFS-Delphi":
         delphi_app()
