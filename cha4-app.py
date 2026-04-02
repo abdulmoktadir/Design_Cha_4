@@ -873,7 +873,7 @@ def get_image_data_uri(image_path: Path) -> str | None:
     return f"data:{mime};base64,{encoded}"
 
 
-def render_sidebar_profile_card(name, role, institution, image_path, brief_text, full_bio=None, extras=None, tag="Researcher"):
+def render_sidebar_profile_card(container, name, role, institution, image_path, brief_text, full_bio=None, extras=None, tag="Researcher"):
     safe_name = escape(name)
     safe_role = escape(role)
     safe_institution = escape(institution)
@@ -892,7 +892,7 @@ def render_sidebar_profile_card(name, role, institution, image_path, brief_text,
             f'<div class="sidebar-profile-bullet">• {escape(item)}</div>' for item in extras
         )
 
-    st.markdown(
+    container.markdown(
         f"""
         <div class="sidebar-profile-card">
             <div class="sidebar-profile-badge">👤 {safe_tag}</div>
@@ -908,7 +908,7 @@ def render_sidebar_profile_card(name, role, institution, image_path, brief_text,
     )
 
     if full_bio:
-        with st.expander(f"More about {name}", expanded=False):
+        with container.expander(f"More about {name}", expanded=False):
             st.markdown(
                 f'<div class="sidebar-profile-bio">{escape(full_bio)}</div>',
                 unsafe_allow_html=True,
@@ -916,17 +916,19 @@ def render_sidebar_profile_card(name, role, institution, image_path, brief_text,
 
 
 def render_sidebar_research_profiles():
-    st.sidebar.markdown("---")
-    st.sidebar.markdown(
+    sidebar_box = st.sidebar.container()
+    sidebar_box.markdown("---")
+    sidebar_box.markdown(
         '<div class="sidebar-section-title">Researcher Profiles</div>',
         unsafe_allow_html=True,
     )
-    st.sidebar.markdown(
-        '<div class="sidebar-section-note">Profiles are shown with higher-contrast styling for better readability.</div>',
+    sidebar_box.markdown(
+        '<div class="sidebar-section-note">Profiles stay fixed in the left panel with improved contrast for readability.</div>',
         unsafe_allow_html=True,
     )
 
     render_sidebar_profile_card(
+        sidebar_box,
         name="Prof. J.Z. Ren 任競爭",
         role="Associate Professor",
         institution="The Hong Kong Polytechnic University",
@@ -945,6 +947,7 @@ def render_sidebar_research_profiles():
     )
 
     render_sidebar_profile_card(
+        sidebar_box,
         name="Md. Abdul Moktadir",
         role="Assistant Professor (Leather Products Engineering)",
         institution="University of Dhaka / PolyU Presidential PhD Fellow",
