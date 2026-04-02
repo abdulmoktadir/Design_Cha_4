@@ -1574,15 +1574,6 @@ def main():
     st.set_page_config(page_title="IT2TrFS-Delphi - WINGS - CoCoSo Toolkit", layout="wide")
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Choose a Module", ["IT2TrFS-Delphi", "IT2TrFS-WINGS", "IT2TrFS-CoCoSo"])
-st.markdown("---")
-        st.success("Authenticated")
-        st.button(
-            "Logout",
-            icon=":material/logout:",
-            on_click=logout,
-            use_container_width=True,
-            type="primary",
-        )
 
     if page == "IT2TrFS-Delphi":
         delphi_app()
