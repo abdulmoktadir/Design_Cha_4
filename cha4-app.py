@@ -6,7 +6,7 @@ import zipfile
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 
 import graphviz
 import numpy as np
@@ -19,158 +19,252 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
 # ============================================================
-# CSS STYLE
+# ENHANCED CSS (Smallpdf‑inspired glassmorphism + interactions)
 # ============================================================
 CSS = """
-<style>
-:root {
-    --bg: #f6f3fb;
-    --bg2: #eef8f6;
-    --surface: rgba(255,255,255,0.94);
-    --surface-strong: #ffffff;
-    --border: #e2daf3;
-    --text: #231942;
-    --muted: #716b88;
-    --primary: #6d28d9;
-    --primary-strong: #4c1d95;
-    --accent: #0f766e;
-    --shadow: 0 18px 44px rgba(35, 25, 66, 0.10);
-    --shadow-soft: 0 10px 24px rgba(35, 25, 66, 0.06);
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
+
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
-html, body, [class*="css"] { font-family: "Inter", "Segoe UI", sans-serif; }
+
 .stApp {
-    background:
-        radial-gradient(circle at top left, rgba(109,40,217,0.10), transparent 26%),
-        radial-gradient(circle at top right, rgba(15,118,110,0.09), transparent 24%),
-        linear-gradient(180deg, var(--bg) 0%, #f9f7fc 52%, var(--bg2) 100%);
-    color: var(--text);
+    background: radial-gradient(circle at 0% 0%, rgba(109,40,217,0.08), transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(15,118,110,0.08), transparent 50%),
+                #f9f7fc;
 }
-.block-container { max-width: 1480px; padding-top: 1.1rem; padding-bottom: 2.5rem; }
+
+/* Glass card for hero */
+.hero-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(109,40,217,0.15);
+    border-radius: 32px;
+    padding: 1.8rem;
+    box-shadow: 0 20px 40px -12px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hero-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 28px 48px -12px rgba(109,40,217,0.2);
+}
+
+/* Module banner – interactive card */
+.module-banner {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(109,40,217,0.2);
+    border-radius: 28px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+}
+.module-banner:hover {
+    border-color: #6d28d9;
+    box-shadow: 0 12px 24px -8px rgba(109,40,217,0.15);
+}
+
+/* Buttons with gradient and lift */
+.stButton > button {
+    background: linear-gradient(135deg, #6d28d9 0%, #0f766e 100%);
+    border: none;
+    border-radius: 40px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(109,40,217,0.3);
+}
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(109,40,217,0.4);
+    filter: brightness(1.02);
+}
+
+/* Data editor cells – interactive feedback */
+[data-testid="stDataFrame"] div[data-testid="StyledDataFrame"] {
+    border-radius: 20px;
+    border: 1px solid #e2daf3;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+[data-testid="stDataFrame"]:hover {
+    border-color: #6d28d9;
+}
+
+/* Sidebar – more depth and hover on profile */
 [data-testid="stSidebar"] {
-    background:
-        radial-gradient(circle at top, rgba(167,139,250,0.16) 0%, rgba(167,139,250,0.02) 30%),
-        linear-gradient(180deg, #1c1533 0%, #17253f 52%, #12343c 100%);
+    background: linear-gradient(180deg, #1c1533 0%, #17253f 100%);
     border-right: 1px solid rgba(255,255,255,0.08);
 }
-[data-testid="stSidebar"] * { color: #edf3ff; }
-[data-testid="stSidebar"] [data-baseweb="input"] > div,
-[data-testid="stSidebar"] [data-baseweb="select"] > div,
-[data-testid="stSidebar"] .stNumberInput input {
-    background: rgba(255,255,255,0.08) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    color: #f9fbff !important;
-}
-[data-testid="stSidebar"] [data-baseweb="radio"] label {
+.sidebar-profile-card {
     background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 14px;
-    padding: 0.52rem 0.78rem;
-    margin-bottom: 0.48rem;
+    backdrop-filter: blur(6px);
+    border-radius: 24px;
+    padding: 1.2rem;
+    transition: all 0.2s ease;
 }
-.hero-card {
-    background:
-        radial-gradient(circle at top right, rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.02) 26%),
-        linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,245,255,0.98) 54%, rgba(239,251,248,0.96) 100%);
-    border: 1px solid rgba(76,29,149,0.10);
-    border-radius: 26px;
-    padding: 1.55rem 1.65rem;
-    box-shadow: var(--shadow);
-    margin-bottom: 1.15rem;
+.sidebar-profile-card:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateX(4px);
 }
-.hero-eyebrow, .module-badge, .sidebar-section-title, .info-label {
-    text-transform: uppercase; letter-spacing: 0.09em; font-size: 0.74rem; font-weight: 800;
-}
-.hero-eyebrow { color: var(--primary-strong); }
-.hero-title { margin-top: 0.2rem; font-size: 2.15rem; font-weight: 850; line-height: 1.05; letter-spacing: -0.035em; color: var(--text); }
-.hero-subtitle { margin-top: 0.55rem; max-width: 980px; font-size: 1rem; line-height: 1.7; color: var(--muted); }
-.hero-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0.9rem; margin-top: 1.15rem; }
-.info-card, .module-banner { background: var(--surface-strong); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-soft); }
-.info-card { padding: 0.95rem 1rem; }
-.info-card strong { display:block; margin-top:0.32rem; color: var(--text); font-size:1rem; }
-.info-card small { display:block; margin-top:0.18rem; color: var(--muted); line-height:1.55; }
-.module-banner {
-    position: relative; overflow:hidden; padding: 1rem 1.1rem; margin-bottom: 1rem;
-    background:
-        radial-gradient(circle at 100% 0%, rgba(109,40,217,0.12) 0%, rgba(109,40,217,0.02) 28%),
-        linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(250,246,255,0.98) 56%, rgba(244,252,250,0.98) 100%);
-}
-.module-badge {
-    display:inline-flex; align-items:center; gap:0.35rem; color: var(--primary-strong);
-    background: rgba(109,40,217,0.08); border:1px solid rgba(109,40,217,0.14); border-radius:999px; padding:0.3rem 0.62rem;
-}
-.module-title { margin-top:0.5rem; font-size:1.55rem; font-weight:820; line-height:1.15; color: var(--text); }
-.module-subtitle { margin-top:0.28rem; max-width:980px; color: var(--muted); line-height:1.65; }
-.stButton > button {
-    width:100%; border:0; border-radius:14px; padding:0.72rem 1.1rem; font-weight:750; color:white;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-    box-shadow: 0 12px 26px rgba(109,40,217,0.22);
-}
-button[data-baseweb="tab"] { border-radius:999px; border:1px solid var(--border); background: rgba(255,255,255,0.84); height:42px; padding:0 1rem; }
-button[data-baseweb="tab"][aria-selected="true"] { background: linear-gradient(135deg, rgba(109,40,217,0.11), rgba(15,118,110,0.13)); border-color: rgba(109,40,217,0.26); color: var(--primary-strong); font-weight:750; }
-[data-baseweb="tab-list"] { gap:0.55rem; padding-bottom:0.45rem; }
-[data-testid="metric-container"] { background: rgba(255,255,255,0.9); padding:1rem; border-radius:18px; border:1px solid var(--border); box-shadow: var(--shadow-soft); }
-[data-testid="stMetricValue"] { color: var(--text); }
-div[data-testid="stDataFrame"], div[data-testid="stTable"] { border:1px solid var(--border); border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.92); box-shadow: var(--shadow-soft); }
-div[data-testid="stExpander"] { border:1px solid var(--border); border-radius:18px; background:rgba(255,255,255,0.80); box-shadow: var(--shadow-soft); }
-textarea, div[data-baseweb="input"] > div, div[data-baseweb="select"] > div, .stNumberInput input { border-radius:14px !important; }
-.sidebar-section-title { color:#f6f3ff !important; margin:0.2rem 0 0.7rem 0; }
-.sidebar-section-note { color:#bfd0ef !important; font-size:0.79rem; line-height:1.6; margin:0 0 0.85rem 0; }
-.sidebar-profile-card { background: linear-gradient(180deg, rgba(33,24,58,0.98) 0%, rgba(21,47,68,0.98) 100%); border:1px solid rgba(200,193,255,0.16); border-radius:18px; padding:1rem; margin:0.1rem 0 0.9rem 0; box-shadow:0 14px 28px rgba(2,8,23,0.26); }
-.sidebar-profile-badge { display:inline-flex; align-items:center; gap:0.35rem; color:#efe9ff !important; background:rgba(167,139,250,0.18); border:1px solid rgba(196,181,253,0.24); border-radius:999px; padding:0.26rem 0.58rem; font-size:0.68rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:0.8rem; }
-.sidebar-profile-image-frame { width:100%; border-radius:16px; overflow:hidden; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); margin-bottom:0.85rem; }
-.sidebar-profile-image { display:block; width:100%; height:auto; }
-.sidebar-profile-image-placeholder { padding:1.05rem 0.85rem; text-align:center; color:#e8e6ff !important; font-size:0.78rem; }
-.sidebar-profile-name { color:#ffffff !important; font-size:1.08rem; font-weight:820; margin:0 0 0.18rem 0; line-height:1.35; }
-.sidebar-profile-role { color:#d9e8ff !important; font-size:0.84rem; font-weight:700; line-height:1.45; margin-bottom:0.16rem; }
-.sidebar-profile-institution { color:#ecf3ff !important; font-size:0.8rem; line-height:1.45; margin-bottom:0.62rem; }
-.sidebar-profile-text, .sidebar-profile-bullet, .sidebar-profile-bio { color:#dbe8f8 !important; font-size:0.8rem; line-height:1.66; }
-.sidebar-profile-divider { border-top:1px solid rgba(255,255,255,0.08); margin:0.72rem 0 0.68rem 0; }
-.sidebar-bio-details { margin:-0.2rem 0 1rem 0; border:1px solid rgba(196,181,253,0.18); border-radius:16px; overflow:hidden; background:rgba(17,24,39,0.22); box-shadow:0 12px 22px rgba(2,8,23,0.18); }
-.sidebar-bio-summary { list-style:none; cursor:pointer; padding:0.8rem 0.92rem; background:linear-gradient(135deg, rgba(109,40,217,0.26) 0%, rgba(15,118,110,0.22) 100%); color:#f6f1ff !important; font-size:0.83rem; font-weight:760; border:none; }
-.sidebar-bio-summary::-webkit-details-marker { display:none; }
-.sidebar-bio-summary::before { content:"▸"; display:inline-block; margin-right:0.45rem; color:#ddd6fe; transition:transform 0.2s ease; }
-.sidebar-bio-details[open] .sidebar-bio-summary::before { transform:rotate(90deg); }
-.sidebar-bio-panel { padding:0.9rem 0.95rem 0.95rem 0.95rem; background:linear-gradient(180deg, rgba(18,28,45,0.96) 0%, rgba(17,43,60,0.96) 100%); color:#e9f2ff !important; font-size:0.8rem; line-height:1.72; border-top:1px solid rgba(255,255,255,0.08); }
-.config-shell { background:linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(249,246,255,0.98) 100%); border:1px solid var(--border); border-radius:18px; padding:1rem 1rem 0.7rem 1rem; margin:0 0 1rem 0; box-shadow:var(--shadow-soft); }
-.config-lead { margin:0 0 0.9rem 0; color:var(--muted); font-size:0.9rem; line-height:1.6; }
-.login-page { position:relative; max-width:960px; margin:1.7rem auto 0 auto; padding:0 0.9rem 1.25rem 0.9rem; }
-.login-hero-box {
-    position:relative; z-index:1;
-    background:
-        radial-gradient(circle at 84% 16%, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.02) 26%),
-        radial-gradient(circle at 12% 108%, rgba(45,212,191,0.18) 0%, rgba(45,212,191,0.02) 28%),
-        linear-gradient(135deg, #2a145f 0%, #6d28d9 48%, #0f766e 100%);
-    border-radius:34px; padding:1.2rem; margin-bottom:1.15rem; box-shadow:0 28px 70px rgba(34,17,64,0.18), 0 12px 26px rgba(15,118,110,0.16); border:1px solid rgba(255,255,255,0.16); overflow:hidden;
-}
-.login-hero-inner { position:relative; z-index:1; min-height:315px; border-radius:26px; padding:2.15rem 2.05rem 1.95rem 2.05rem; border:1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%); backdrop-filter: blur(10px); }
-.login-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.42rem 0.85rem; border-radius:999px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.14); color:rgba(255,255,255,0.96); font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; }
-.login-hero-box h1 { color:#ffffff !important; font-size:clamp(2.5rem, 4.8vw, 3.9rem); line-height:1.02; margin:1rem 0 0.95rem 0; letter-spacing:-0.055em; max-width:760px; }
-.login-hero-box p { color:rgba(255,255,255,0.93) !important; margin:0; max-width:700px; font-size:1.08rem; line-height:1.72; }
-.login-pill-row { display:flex; flex-wrap:wrap; gap:0.65rem; margin-top:1.15rem; }
-.login-pill { display:inline-flex; align-items:center; padding:0.48rem 0.8rem; border-radius:999px; font-size:0.82rem; font-weight:650; color:#eff6ff; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.14); }
-.login-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0.85rem; margin-top:1.35rem; }
-.login-metric-card { padding:0.92rem 0.95rem; border-radius:18px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.12); }
-.login-metric-label { display:block; color:rgba(255,255,255,0.72); font-size:0.73rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; }
-.login-metric-value { display:block; margin-top:0.35rem; color:#ffffff; font-size:1.08rem; font-weight:800; }
-.login-metric-note { display:block; margin-top:0.25rem; color:rgba(255,255,255,0.74); font-size:0.82rem; line-height:1.45; }
-.login-form-note { text-align:center; color:var(--text); font-size:1rem; font-weight:650; margin:0 0 1rem 0; }
-div[data-testid="stForm"] { background:linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(252,250,255,0.99) 100%); border:1px solid rgba(225,217,241,0.92); border-radius:28px; padding:1.55rem 1.55rem 1.18rem 1.55rem; box-shadow:0 24px 48px rgba(34,17,64,0.10), 0 12px 26px rgba(109,40,217,0.08); max-width:920px; margin:0 auto; }
-div[data-testid="stForm"] label p { font-size:1.05rem !important; font-weight:700 !important; color:var(--text) !important; }
-div[data-testid="stForm"] .stTextInput input { min-height:60px; font-size:1rem; border-radius:16px; padding:0.92rem 1rem; border:1px solid #ddd6f3; background:rgba(251,249,255,0.98); }
-.login-helper { display:flex; justify-content:center; margin-top:0.75rem; }
-.login-helper span { display:inline-flex; align-items:center; gap:0.4rem; border-radius:999px; padding:0.42rem 0.8rem; background:rgba(255,255,255,0.78); color:var(--muted); font-size:0.8rem; border:1px solid rgba(225,217,241,0.92); }
-.app-footer { text-align:center; margin-top:2.6rem; padding:1rem 0 0.25rem 0; color:var(--muted); font-size:0.78rem; border-top:1px solid rgba(35,25,66,0.08); }
-.copyright-pill { display:inline-block; margin-bottom:0.55rem; padding:0.38rem 0.9rem; border-radius:999px; border:1px solid #dfd7f2; background:#ffffff; color:var(--text); font-weight:750; box-shadow:0 8px 22px rgba(34,17,64,0.05); }
-@media (max-width: 1200px) { .hero-grid { grid-template-columns:1fr; } }
-@media (max-width: 900px) { .login-metrics { grid-template-columns:1fr; } .login-hero-box h1 { font-size:2.18rem; } }
-</style>
-"""
 
+/* Expanders – interactive */
+details {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    border: 1px solid #e2daf3;
+    transition: all 0.2s;
+}
+details:hover {
+    border-color: #6d28d9;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+/* Metrics cards */
+[data-testid="metric-container"] {
+    background: white;
+    border-radius: 24px;
+    padding: 1rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+[data-testid="metric-container"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 28px rgba(109,40,217,0.1);
+}
+
+/* Tabs – modern */
+button[data-baseweb="tab"] {
+    background: rgba(255,255,255,0.7);
+    border-radius: 40px;
+    border: 1px solid #e2daf3;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    background: #6d28d9;
+    border-color: #6d28d9;
+    color: white;
+}
+button[data-baseweb="tab"]:hover {
+    background: rgba(109,40,217,0.1);
+    border-color: #6d28d9;
+}
+
+/* Tooltip style */
+.tooltip {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dotted #6d28d9;
+}
+.tooltip .tooltiptext {
+    visibility: hidden;
+    background-color: #1c1533;
+    color: #fff;
+    text-align: center;
+    border-radius: 12px;
+    padding: 6px 12px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 0;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Flash message animations */
+.flash-success {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #065f46;
+    padding: 12px 20px;
+    border-radius: 40px;
+    margin-bottom: 1rem;
+    animation: slideIn 0.3s ease;
+}
+.flash-error {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #991b1b;
+    padding: 12px 20px;
+    border-radius: 40px;
+    margin-bottom: 1rem;
+    animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #c4b5fd;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #6d28d9;
+}
+
+/* Input fields */
+input, textarea, select {
+    border-radius: 16px !important;
+    border: 1px solid #e2daf3 !important;
+    transition: all 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+    border-color: #6d28d9 !important;
+    box-shadow: 0 0 0 2px rgba(109,40,217,0.2) !important;
+}
+
+/* Login page – modernised */
+.login-hero-box {
+    background: linear-gradient(135deg, #2a145f 0%, #6d28d9 48%, #0f766e 100%);
+    border-radius: 36px;
+    backdrop-filter: blur(4px);
+}
+.login-hero-inner {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(12px);
+    border-radius: 28px;
+}
+.login-metric-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    transition: transform 0.2s;
+}
+.login-metric-card:hover {
+    transform: scale(1.02);
+    background: rgba(255,255,255,0.15);
+}
+"""
 
 def apply_custom_styling():
     st.markdown(CSS, unsafe_allow_html=True)
 
+def flash_message(msg: str, type_: str = "success"):
+    """Display an animated flash message."""
+    st.markdown(f'<div class="flash-{type_}">{msg}</div>', unsafe_allow_html=True)
+
+# ============================================================
+# Helper functions (unchanged)
+# ============================================================
 def _compact_name_editor(
     panel_title: str,
     item_label: str,
@@ -226,12 +320,9 @@ def _compact_name_editor(
     st.session_state[state_key] = names
     return names
 
-
-
 def logout():
     st.session_state.authenticated = False
     st.rerun()
-
 
 def check_password():
     if "authenticated" not in st.session_state:
@@ -248,7 +339,7 @@ def check_password():
                 <div class="login-hero-box">
                     <div class="login-hero-inner">
                         <div class="login-badge">Protected research login</div>
-                        <h1>🔬 Integrated Systsem-Level Decision Support Studio</h1>
+                        <h1>🔬 Integrated System-Level Decision Support Studio</h1>
                         <p>Enter the secured workspace for stratification modeling, expert-weight analytics, DFS-AHP, DFS-QFD, and MILP-based portfolio optimization in one deployment-ready system.</p>
                         <div class="login-pill-row">
                             <span class="login-pill">📊 Stratification</span>
@@ -298,17 +389,14 @@ def check_password():
         if submitted:
             if hmac.compare_digest(password, str(expected_password)):
                 st.session_state.authenticated = True
-                st.success("Access granted.")
+                flash_message("Access granted.", "success")
                 st.rerun()
             else:
-                st.error("Incorrect password.")
-
+                flash_message("Incorrect password.", "error")
     return False
-
 
 def get_asset_path(filename: str) -> Path:
     return Path(__file__).parent / "assets" / filename
-
 
 def get_image_data_uri(image_path: Path) -> Optional[str]:
     image_path = Path(image_path)
@@ -318,7 +406,6 @@ def get_image_data_uri(image_path: Path) -> Optional[str]:
     mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}.get(suffix, "image/png")
     encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
     return f"data:{mime};base64,{encoded}"
-
 
 def render_sidebar_profile_card(container, name, role, institution, image_path, brief_text, full_bio=None, extras=None, tag="Researcher"):
     image_uri = get_image_data_uri(Path(image_path))
@@ -378,7 +465,6 @@ def render_sidebar_research_profiles():
         tag='Lead Researcher',
     )
 
-
 def render_app_header():
     st.markdown(
         """
@@ -394,19 +480,22 @@ def render_app_header():
         unsafe_allow_html=True,
     )
 
-
 def render_module_banner(icon: str, title: str, subtitle: str, badge: str = "Module"):
     st.markdown(
         f"""
         <div class="module-banner">
-            <div class="module-badge">{escape(badge)}</div>
-            <div class="module-title">{escape(icon)} {escape(title)}</div>
-            <div class="module-subtitle">{escape(subtitle)}</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 2rem;">{icon}</div>
+                <div>
+                    <div class="module-badge" style="display: inline-block;">{badge}</div>
+                    <div class="module-title" style="margin-top: 8px;">{title}</div>
+                    <div class="module-subtitle">{subtitle}</div>
+                </div>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
 
 def render_footer():
     st.markdown(
@@ -417,9 +506,8 @@ def render_footer():
     )
 
 # ============================================================
-# MODULE 1: STRATIFICATION MODELER
+# MODULE 1: STRATIFICATION MODELER (unchanged logic)
 # ============================================================
-
 class StratificationEngine:
     @staticmethod
     def parse_parents(s: str) -> List[str]:
@@ -484,7 +572,6 @@ class StratificationEngine:
                 lo = mid
         return (lo + hi) / 2.0
 
-
 def _init_strat_base_df(num_events: int) -> pd.DataFrame:
     root_id = "S1"
     base_ids = [f"S{i}" for i in range(2, num_events + 2)]
@@ -499,7 +586,6 @@ def _init_strat_base_df(num_events: int) -> pd.DataFrame:
         }
     )
 
-
 def _init_strat_inter_df(num_events: int) -> pd.DataFrame:
     if num_events == 4:
         return pd.DataFrame(
@@ -509,7 +595,6 @@ def _init_strat_inter_df(num_events: int) -> pd.DataFrame:
             ]
         )
     return pd.DataFrame(columns=["ID", "Parents (e.g. S2,S3)", "Label"])
-
 
 def _ensure_strat_store(num_events: int) -> None:
     base_cols = ["ID", "Label", "Value (%)"]
@@ -529,7 +614,6 @@ def _ensure_strat_store(num_events: int) -> None:
 
     st.session_state["strat_base_df"] = base_df.loc[:, base_cols].copy()
     st.session_state["strat_inter_df"] = inter_df.reindex(columns=inter_cols).copy()
-
 
 def page_stratification():
     render_module_banner("🧭", "Stratification Modeler", "Network-based stratification dashboard for base events, interaction scenarios, and probability propagation.", badge="Module 1")
@@ -726,21 +810,18 @@ def page_stratification():
                             (str(row["Scenario ID"]), float(row["Probability"]))
                             for _, row in send_df.iterrows()
                         )
-                        st.success("Selected scenario probabilities, including base/root scenarios, sent to Module 3 (DFS-AHP).")
+                        flash_message("Selected scenario probabilities, including base/root scenarios, sent to Module 3 (DFS-AHP).", "success")
 
         except Exception as e:
             st.error(f"Configuration Error: {e}")
 
-
 # ============================================================
-# MODULE 2: EXPERT WEIGHT DETERMINATION MODEL
+# MODULE 2: EXPERT WEIGHT DETERMINATION (unchanged)
 # ============================================================
-
 def init_expert_cov_df(n_experts: int, n_dims: int) -> pd.DataFrame:
     cols = [f"X{j+1}" for j in range(n_dims)]
     idx = [f"Ex{i+1}" for i in range(n_experts)]
     return pd.DataFrame(np.zeros((n_experts, n_dims), dtype=float), index=idx, columns=cols)
-
 
 def minmax_normalize_expert_data(df: pd.DataFrame) -> pd.DataFrame:
     x = df.astype(float).copy()
@@ -752,12 +833,10 @@ def minmax_normalize_expert_data(df: pd.DataFrame) -> pd.DataFrame:
     normalized = normalized.fillna(0.0)
     return normalized
 
-
 def compute_excel_matching_covariance(normalized_df: pd.DataFrame) -> pd.DataFrame:
     x = normalized_df.astype(float).to_numpy()
     cov = np.cov(x, rowvar=False, ddof=0)
     return pd.DataFrame(cov, index=normalized_df.columns, columns=normalized_df.columns)
-
 
 def compute_sorted_eigenvector_weights(raw_df: pd.DataFrame, cov_df: pd.DataFrame):
     cov_matrix = cov_df.astype(float).to_numpy()
@@ -800,7 +879,139 @@ def compute_sorted_eigenvector_weights(raw_df: pd.DataFrame, cov_df: pd.DataFram
 
     return max_eigenvalue, eigen_df, result_df, all_eigen_df
 
+def page_expert_covariance_model():
+    render_module_banner("👥", "ML Model for Expert Weight Determination", "ML-based expert weighting with normalized data, covariance structure, and eigenvector-driven priority estimation.", badge="Module 2")
 
+    st.markdown("### Configuration")
+    cfg1, cfg2 = st.columns(2)
+    with cfg1:
+        n_experts = int(
+            st.number_input(
+                "Number of experts",
+                min_value=2,
+                max_value=100,
+                value=4,
+                step=1,
+                key="cov_n_experts",
+            )
+        )
+    with cfg2:
+        n_dims = int(
+            st.number_input(
+                "Number of dimensions",
+                min_value=2,
+                max_value=50,
+                value=10,
+                step=1,
+                key="cov_n_dims",
+            )
+        )
+
+    st.subheader("Expert and dimension names")
+    c1, c2 = st.columns(2)
+
+    with c1:
+        expert_names = _compact_name_editor(
+            "Expert names",
+            "Expert",
+            n_experts,
+            "cov_expert_names_compact",
+            "Ex",
+            columns=2,
+        )
+
+    with c2:
+        dim_names = _compact_name_editor(
+            "Dimension names",
+            "Dimension",
+            n_dims,
+            "cov_dimension_names_compact",
+            "X",
+            columns=2,
+        )
+
+    store_key = f"cov|{n_experts}|{n_dims}|{'|'.join(expert_names)}|{'|'.join(dim_names)}"
+    if st.session_state.get("cov_store_key") != store_key:
+        st.session_state["cov_store_key"] = store_key
+        df0 = init_expert_cov_df(n_experts, n_dims)
+        df0.index = expert_names
+        df0.columns = dim_names
+        st.session_state["cov_input_df"] = df0
+
+    df_current = st.session_state["cov_input_df"].copy()
+    df_current.index = expert_names
+    df_current.columns = dim_names
+    st.session_state["cov_input_df"] = df_current
+
+    st.subheader("Input expert data matrix χ_ij")
+    st.caption("Paste expert values directly from Excel.")
+    input_df = st.data_editor(
+        st.session_state["cov_input_df"],
+        use_container_width=True,
+        num_rows="fixed",
+        height=300,
+        key="cov_input_editor",
+    )
+    input_df.index = expert_names
+    input_df.columns = dim_names
+    st.session_state["cov_input_df"] = input_df
+
+    if st.button("Compute expert weights", type="primary", key="cov_run"):
+        try:
+            raw_df = input_df.astype(float).copy()
+        except Exception:
+            st.error("All input values must be numeric.")
+            return
+
+        normalized_df = minmax_normalize_expert_data(raw_df)
+        cov_df = compute_excel_matching_covariance(normalized_df)
+
+        max_eigenvalue, eigen_df, result_df, all_eigen_df = compute_sorted_eigenvector_weights(raw_df, cov_df)
+
+        st.session_state["cov_raw_df"] = raw_df
+        st.session_state["cov_normalized_df"] = normalized_df
+        st.session_state["cov_cov_df"] = cov_df
+        st.session_state["cov_eigen_df"] = eigen_df
+        st.session_state["cov_result_df"] = result_df
+        st.session_state["cov_all_eigen_df"] = all_eigen_df
+
+        st.subheader("Normalized data ψ")
+        st.dataframe(normalized_df.round(6), use_container_width=True)
+
+        st.subheader("Covariance matrix η_jj")
+        st.caption("Computed from normalized data using population covariance: ddof=0")
+        st.dataframe(cov_df.round(4), use_container_width=True)
+
+        st.subheader("Eigenvalues")
+        st.dataframe(all_eigen_df.round(6), use_container_width=True)
+        st.metric("Maximum Eigenvalue", f"{max_eigenvalue:.6f}")
+
+        st.subheader("Principal and sorted eigenvector")
+        st.dataframe(eigen_df.round(6), use_container_width=True)
+
+        st.subheader("Expert scores and weights")
+        st.dataframe(result_df.round(6), use_container_width=True)
+        st.bar_chart(result_df.set_index("Expert")[["Weight"]], use_container_width=True)
+
+        out = io.BytesIO()
+        with pd.ExcelWriter(out, engine="openpyxl") as writer:
+            raw_df.to_excel(writer, sheet_name="Expert_Data")
+            normalized_df.to_excel(writer, sheet_name="Normalized_Psi")
+            cov_df.to_excel(writer, sheet_name="Covariance_Eta")
+            all_eigen_df.to_excel(writer, index=False, sheet_name="Eigenvalues")
+            eigen_df.to_excel(writer, index=False, sheet_name="Eigenvectors")
+            result_df.to_excel(writer, index=False, sheet_name="Expert_Weights")
+
+        st.download_button(
+            "Download Excel",
+            data=out.getvalue(),
+            file_name="expert_covariance_sorted_eigenvector.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+# ============================================================
+# MODULE 3: DFS-AHP (unchanged logic)
+# ============================================================
 class DFSAHP:
     def __init__(self):
         self.optimistic_uv = {
@@ -1043,7 +1254,6 @@ class DFSAHP:
 
         return df, invalid_terms, {"A": A, "GM": cr_gm, "EIGEN": cr_ev}
 
-
 def make_blank_ahp_matrix(criteria: List[str]) -> pd.DataFrame:
     cols = []
     for c in criteria:
@@ -1054,7 +1264,6 @@ def make_blank_ahp_matrix(criteria: List[str]) -> pd.DataFrame:
         df.at[criteria[i], f"{c} (P)"] = "EEI"
     return df
 
-
 def fmt_ratio(x: float) -> str:
     for d in [2, 3, 4, 5, 6, 7, 8, 9]:
         if abs(x - 1.0 / d) < 1e-3:
@@ -1063,7 +1272,6 @@ def fmt_ratio(x: float) -> str:
         if abs(x - k) < 1e-3:
             return f"{k:.2f}"
     return f"{x:.2f}"
-
 
 @dataclass
 class DFS:
@@ -1080,7 +1288,6 @@ class DFS:
             float(np.clip(self.nu_P, 0, 1)),
         )
 
-
 def dfs_dwgm(values: List[DFS], weights: List[float]) -> DFS:
     mu_O = 1.0
     nu_O = 1.0
@@ -1092,7 +1299,6 @@ def dfs_dwgm(values: List[DFS], weights: List[float]) -> DFS:
         mu_P *= (max(v.mu_P, 1e-12) ** w)
         nu_P *= (max(v.nu_P, 1e-12) ** w)
     return DFS(mu_O, nu_O, mu_P, nu_P).clip()
-
 
 def dfs_multiply(weight_dfs: DFS, rel_dfs: DFS) -> DFS:
     w = weight_dfs
@@ -1109,13 +1315,11 @@ def dfs_multiply(weight_dfs: DFS, rel_dfs: DFS) -> DFS:
 
     return DFS(a, b, c, d).clip()
 
-
 def score_defuzz_from_weighted(weighted: DFS) -> float:
     a, b, c, d = weighted.mu_O, weighted.nu_O, weighted.mu_P, weighted.nu_P
     term1 = math.sqrt(max((a + d) / 8.0, 0.0))
     term2 = math.sqrt(max((b + c) / 8.0, 0.0))
     return 0.5 + (term1 - term2)
-
 
 def default_scale_uv() -> Dict[str, Tuple[float, float]]:
     return {
@@ -1139,12 +1343,10 @@ def default_scale_uv() -> Dict[str, Tuple[float, float]]:
         "EMU": (0.10, 0.90),
     }
 
-
 def term_to_dfs(term_O: str, term_P: str, scale: Dict[str, Tuple[float, float]]) -> DFS:
     muO, nuO = scale.get(term_O, scale["EEI"])
     muP, nuP = scale.get(term_P, scale["EEU"])
     return DFS(muO, nuO, muP, nuP).clip()
-
 
 def normalize_weights(ws: List[float]) -> List[float]:
     if len(ws) == 0:
@@ -1154,7 +1356,6 @@ def normalize_weights(ws: List[float]) -> List[float]:
         return [1.0 / len(ws)] * len(ws)
     return [w / s for w in ws]
 
-
 def safe_float(x, default=0.0) -> float:
     try:
         if x is None or (isinstance(x, str) and x.strip() == ""):
@@ -1162,7 +1363,6 @@ def safe_float(x, default=0.0) -> float:
         return float(x)
     except Exception:
         return default
-
 
 def init_relationship_df(rc_names: List[str], ms_names: List[str]) -> pd.DataFrame:
     cols = ["RC"]
@@ -1172,7 +1372,6 @@ def init_relationship_df(rc_names: List[str], ms_names: List[str]) -> pd.DataFra
     for c in cols[1:]:
         df[c] = "EEI" if c.endswith("_O") else "EEU"
     return df[cols]
-
 
 def init_rc_weight_df(rc_names: List[str]) -> pd.DataFrame:
     return pd.DataFrame(
@@ -1185,10 +1384,8 @@ def init_rc_weight_df(rc_names: List[str]) -> pd.DataFrame:
         }
     )
 
-
 def init_cost_df(ms_names: List[str]) -> pd.DataFrame:
     return pd.DataFrame({"MS": ms_names, "ICj": [1.0] * len(ms_names)})
-
 
 def dfs_table_to_map(df: pd.DataFrame, criteria: List[str]) -> Dict[str, DFS]:
     base = df.set_index("Criterion")
@@ -1202,7 +1399,6 @@ def dfs_table_to_map(df: pd.DataFrame, criteria: List[str]) -> Dict[str, DFS]:
             float(row["d (νP)"]),
         ).clip()
     return out
-
 
 def build_weight_table_from_dfs_map(criteria: List[str], dfs_map: Dict[str, DFS], engine: DFSAHP) -> pd.DataFrame:
     rows = []
@@ -1229,7 +1425,6 @@ def build_weight_table_from_dfs_map(criteria: List[str], dfs_map: Dict[str, DFS]
     df["Rank"] = np.arange(1, len(df) + 1)
     return df
 
-
 def weighted_componentwise_dfs_aggregate(values: List[DFS], weights: List[float]) -> DFS:
     m = len(values)
     W = np.array(normalize_weights([safe_float(w, 1.0) for w in weights]), dtype=float)
@@ -1253,7 +1448,6 @@ def weighted_componentwise_dfs_aggregate(values: List[DFS], weights: List[float]
 
     return DFS(a, b, c, d).clip()
 
-
 def aggregate_experts_decomposed_dfs(
     expert_tables: List[pd.DataFrame],
     expert_weights: List[float],
@@ -1268,7 +1462,6 @@ def aggregate_experts_decomposed_dfs(
         agg_map[c] = weighted_componentwise_dfs_aggregate(vals, expert_weights)
 
     return build_weight_table_from_dfs_map(criteria, agg_map, engine)
-
 
 def aggregate_scenarios_decomposed_dfs(
     scenario_tables: List[pd.DataFrame],
@@ -1287,7 +1480,6 @@ def aggregate_scenarios_decomposed_dfs(
     final_df = build_weight_table_from_dfs_map(criteria, final_map, engine)
     return final_df, probs
 
-
 def decomposed_weight_table_to_rc_df(df: pd.DataFrame, criteria_order: List[str]) -> pd.DataFrame:
     x = df.copy().set_index("Criterion").loc[criteria_order].reset_index()
     return pd.DataFrame(
@@ -1299,7 +1491,6 @@ def decomposed_weight_table_to_rc_df(df: pd.DataFrame, criteria_order: List[str]
             "nu_P": x["d (νP)"].astype(float).tolist(),
         }
     )
-
 
 def _to_float(x, default=0.0):
     try:
@@ -1315,218 +1506,13 @@ def _to_float(x, default=0.0):
     except Exception:
         return default
 
-
 def expected_from_omp(O, ML, P):
     return (O + P + 4.0 * ML) / 6.0
-
 
 def make_square_df(names, fill=0.0):
     df = pd.DataFrame(fill, index=names, columns=names)
     np.fill_diagonal(df.values, 0.0)
     return df
-
-
-def subset_cost_time(x, cost, time, rho, zeta):
-    x = x.astype(int)
-    base_cost = float(np.dot(cost, x))
-    base_time = float(np.dot(time, x))
-
-    n = len(x)
-    sav_cost = 0.0
-    sav_time = 0.0
-    for i in range(n):
-        if x[i] == 0:
-            continue
-        for j in range(i + 1, n):
-            if x[j] == 0:
-                continue
-            sav_cost += float(rho[i, j])
-            sav_time += float(zeta[i, j])
-
-    total_cost = base_cost - sav_cost
-    total_time = base_time - sav_time
-    return total_cost, total_time, base_cost, base_time, sav_cost, sav_time
-
-
-def solve_by_enumeration(rep, cost, time, rho, zeta, budget, time_limit):
-    n = len(rep)
-    best = None
-    for mask in range(1 << n):
-        x = np.array([(mask >> k) & 1 for k in range(n)], dtype=int)
-        total_cost, total_time, base_cost, base_time, sav_cost, sav_time = subset_cost_time(
-            x, cost, time, rho, zeta
-        )
-        if total_cost <= budget + 1e-9 and total_time <= time_limit + 1e-9:
-            obj = float(np.dot(rep, x))
-            if (best is None) or (obj > best["obj"] + 1e-12):
-                best = {
-                    "x": x,
-                    "obj": obj,
-                    "total_cost": total_cost,
-                    "total_time": total_time,
-                    "base_cost": base_cost,
-                    "base_time": base_time,
-                    "sav_cost": sav_cost,
-                    "sav_time": sav_time,
-                }
-    return best
-
-
-def compute_expected_vector(df_omp, col_O="O", col_ML="ML", col_P="P"):
-    O = df_omp[col_O].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
-    ML = df_omp[col_ML].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
-    P = df_omp[col_P].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
-    return expected_from_omp(O, ML, P)
-
-
-def compute_expected_matrix(df_O, df_ML, df_P):
-    n = df_O.shape[0]
-    E = np.zeros((n, n), dtype=float)
-    for i in range(n):
-        for j in range(n):
-            O = _to_float(df_O.iloc[i, j], 0.0)
-            ML = _to_float(df_ML.iloc[i, j], 0.0)
-            P = _to_float(df_P.iloc[i, j], 0.0)
-            E[i, j] = expected_from_omp(O, ML, P)
-    np.fill_diagonal(E, 0.0)
-    out = np.zeros_like(E)
-    for i in range(n):
-        for j in range(i + 1, n):
-            out[i, j] = E[i, j]
-    return out
-
-
-def page_expert_covariance_model():
-    render_module_banner("👥", "ML Model for Expert Weight Determination", "ML-based expert weighting with normalized data, covariance structure, and eigenvector-driven priority estimation.", badge="Module 2")
-
-    st.markdown("### Configuration")
-    cfg1, cfg2 = st.columns(2)
-    with cfg1:
-        n_experts = int(
-            st.number_input(
-                "Number of experts",
-                min_value=2,
-                max_value=100,
-                value=4,
-                step=1,
-                key="cov_n_experts",
-            )
-        )
-    with cfg2:
-        n_dims = int(
-            st.number_input(
-                "Number of dimensions",
-                min_value=2,
-                max_value=50,
-                value=10,
-                step=1,
-                key="cov_n_dims",
-            )
-        )
-
-    st.subheader("Expert and dimension names")
-    c1, c2 = st.columns(2)
-
-    with c1:
-        expert_names = _compact_name_editor(
-            "Expert names",
-            "Expert",
-            n_experts,
-            "cov_expert_names_compact",
-            "Ex",
-            columns=2,
-        )
-
-    with c2:
-        dim_names = _compact_name_editor(
-            "Dimension names",
-            "Dimension",
-            n_dims,
-            "cov_dimension_names_compact",
-            "X",
-            columns=2,
-        )
-
-    store_key = f"cov|{n_experts}|{n_dims}|{'|'.join(expert_names)}|{'|'.join(dim_names)}"
-    if st.session_state.get("cov_store_key") != store_key:
-        st.session_state["cov_store_key"] = store_key
-        df0 = init_expert_cov_df(n_experts, n_dims)
-        df0.index = expert_names
-        df0.columns = dim_names
-        st.session_state["cov_input_df"] = df0
-
-    df_current = st.session_state["cov_input_df"].copy()
-    df_current.index = expert_names
-    df_current.columns = dim_names
-    st.session_state["cov_input_df"] = df_current
-
-    st.subheader("Input expert data matrix χ_ij")
-    st.caption("Paste expert values directly from Excel.")
-    input_df = st.data_editor(
-        st.session_state["cov_input_df"],
-        use_container_width=True,
-        num_rows="fixed",
-        height=300,
-        key="cov_input_editor",
-    )
-    input_df.index = expert_names
-    input_df.columns = dim_names
-    st.session_state["cov_input_df"] = input_df
-
-    if st.button("Compute expert weights", type="primary", key="cov_run"):
-        try:
-            raw_df = input_df.astype(float).copy()
-        except Exception:
-            st.error("All input values must be numeric.")
-            return
-
-        normalized_df = minmax_normalize_expert_data(raw_df)
-        cov_df = compute_excel_matching_covariance(normalized_df)
-
-        max_eigenvalue, eigen_df, result_df, all_eigen_df = compute_sorted_eigenvector_weights(raw_df, cov_df)
-
-        st.session_state["cov_raw_df"] = raw_df
-        st.session_state["cov_normalized_df"] = normalized_df
-        st.session_state["cov_cov_df"] = cov_df
-        st.session_state["cov_eigen_df"] = eigen_df
-        st.session_state["cov_result_df"] = result_df
-        st.session_state["cov_all_eigen_df"] = all_eigen_df
-
-        st.subheader("Normalized data ψ")
-        st.dataframe(normalized_df.round(6), use_container_width=True)
-
-        st.subheader("Covariance matrix η_jj")
-        st.caption("Computed from normalized data using population covariance: ddof=0")
-        st.dataframe(cov_df.round(4), use_container_width=True)
-
-        st.subheader("Eigenvalues")
-        st.dataframe(all_eigen_df.round(6), use_container_width=True)
-        st.metric("Maximum Eigenvalue", f"{max_eigenvalue:.6f}")
-
-        st.subheader("Principal and sorted eigenvector")
-        st.dataframe(eigen_df.round(6), use_container_width=True)
-
-        st.subheader("Expert scores and weights")
-        st.dataframe(result_df.round(6), use_container_width=True)
-        st.bar_chart(result_df.set_index("Expert")[["Weight"]], use_container_width=True)
-
-        out = io.BytesIO()
-        with pd.ExcelWriter(out, engine="openpyxl") as writer:
-            raw_df.to_excel(writer, sheet_name="Expert_Data")
-            normalized_df.to_excel(writer, sheet_name="Normalized_Psi")
-            cov_df.to_excel(writer, sheet_name="Covariance_Eta")
-            all_eigen_df.to_excel(writer, index=False, sheet_name="Eigenvalues")
-            eigen_df.to_excel(writer, index=False, sheet_name="Eigenvectors")
-            result_df.to_excel(writer, index=False, sheet_name="Expert_Weights")
-
-        st.download_button(
-            "Download Excel",
-            data=out.getvalue(),
-            file_name="expert_covariance_sorted_eigenvector.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-
-
 
 def _ahp_round_export_df(df: pd.DataFrame, digits: int = 6) -> pd.DataFrame:
     out = df.copy()
@@ -1538,7 +1524,6 @@ def _ahp_round_export_df(df: pd.DataFrame, digits: int = 6) -> pd.DataFrame:
         if pd.api.types.is_numeric_dtype(out[col]):
             out[col] = out[col].round(digits)
     return out
-
 
 def _build_dfs_ahp_export_excel(
     criteria: List[str],
@@ -2009,9 +1994,11 @@ def page_dfs_ahp():
 
         rc_weight_df = decomposed_weight_table_to_rc_df(src_df, criteria0)
         st.session_state["qfd_rc_weight_df"] = rc_weight_df
-        st.success("Sent decomposed RC weights to Module 4 (DFS-QFD).")
+        flash_message("Sent decomposed RC weights to Module 4 (DFS-QFD).", "success")
 
-
+# ============================================================
+# MODULE 4: DFS-QFD (unchanged logic)
+# ============================================================
 def page_dfs_qfd():
     render_module_banner("📊", "DFS-QFD Analysis", "Map requirement criteria to mitigation strategies and compute final ReP-based prioritization through DFS relationship modeling.", badge="Module 4")
 
@@ -2242,7 +2229,7 @@ def page_dfs_qfd():
             rep_df = pd.DataFrame({"MS": ms_names, "ReP": RePj})
             st.session_state["milp_rep_df"] = rep_df
             st.session_state["milp_ms_names"] = ms_names
-            st.success("Sent RePj to Module 5 (MILP).")
+            flash_message("Sent RePj to Module 5 (MILP).", "success")
 
         st.subheader("Download DFS-QFD Excel")
         buf = io.BytesIO()
@@ -2270,6 +2257,74 @@ def page_dfs_qfd():
                 mime="text/csv",
             )
 
+# ============================================================
+# MODULE 5: MILP (unchanged logic)
+# ============================================================
+def subset_cost_time(x, cost, time, rho, zeta):
+    x = x.astype(int)
+    base_cost = float(np.dot(cost, x))
+    base_time = float(np.dot(time, x))
+
+    n = len(x)
+    sav_cost = 0.0
+    sav_time = 0.0
+    for i in range(n):
+        if x[i] == 0:
+            continue
+        for j in range(i + 1, n):
+            if x[j] == 0:
+                continue
+            sav_cost += float(rho[i, j])
+            sav_time += float(zeta[i, j])
+
+    total_cost = base_cost - sav_cost
+    total_time = base_time - sav_time
+    return total_cost, total_time, base_cost, base_time, sav_cost, sav_time
+
+def solve_by_enumeration(rep, cost, time, rho, zeta, budget, time_limit):
+    n = len(rep)
+    best = None
+    for mask in range(1 << n):
+        x = np.array([(mask >> k) & 1 for k in range(n)], dtype=int)
+        total_cost, total_time, base_cost, base_time, sav_cost, sav_time = subset_cost_time(
+            x, cost, time, rho, zeta
+        )
+        if total_cost <= budget + 1e-9 and total_time <= time_limit + 1e-9:
+            obj = float(np.dot(rep, x))
+            if (best is None) or (obj > best["obj"] + 1e-12):
+                best = {
+                    "x": x,
+                    "obj": obj,
+                    "total_cost": total_cost,
+                    "total_time": total_time,
+                    "base_cost": base_cost,
+                    "base_time": base_time,
+                    "sav_cost": sav_cost,
+                    "sav_time": sav_time,
+                }
+    return best
+
+def compute_expected_vector(df_omp, col_O="O", col_ML="ML", col_P="P"):
+    O = df_omp[col_O].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+    ML = df_omp[col_ML].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+    P = df_omp[col_P].map(lambda v: _to_float(v, 0.0)).to_numpy(dtype=float)
+    return expected_from_omp(O, ML, P)
+
+def compute_expected_matrix(df_O, df_ML, df_P):
+    n = df_O.shape[0]
+    E = np.zeros((n, n), dtype=float)
+    for i in range(n):
+        for j in range(n):
+            O = _to_float(df_O.iloc[i, j], 0.0)
+            ML = _to_float(df_ML.iloc[i, j], 0.0)
+            P = _to_float(df_P.iloc[i, j], 0.0)
+            E[i, j] = expected_from_omp(O, ML, P)
+    np.fill_diagonal(E, 0.0)
+    out = np.zeros_like(E)
+    for i in range(n):
+        for j in range(i + 1, n):
+            out[i, j] = E[i, j]
+    return out
 
 def page_milp():
     render_module_banner("🎯", "MILP Optimization", "Optimize the final strategy portfolio under budget and time constraints using expected values and pairwise savings effects.", badge="Module 5")
@@ -2544,8 +2599,9 @@ def page_milp():
             mime="application/zip",
         )
 
-
-
+# ============================================================
+# MAIN
+# ============================================================
 def main():
     apply_custom_styling()
     if not check_password():
@@ -2588,7 +2644,6 @@ def main():
         page_milp()
 
     render_footer()
-
 
 if __name__ == "__main__":
     main()
